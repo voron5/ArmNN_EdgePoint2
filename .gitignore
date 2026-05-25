@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+*.pyo
+build-tool/docker_output/
+build-tool/__pycache__/

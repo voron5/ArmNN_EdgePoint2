@@ -1,0 +1,34 @@
+/// Copyright (c) 2022, 2024 ARM Limited and Contributors. All rights reserved.
+///
+/// SPDX-License-Identifier: MIT
+///
+
+namespace armnn
+{
+/**
+@page swtools Software Components
+
+On this page you can find all software components contained in the Arm NN repository. You will find links to how-to guides and
+other helpful information in each section.
+
+ - @subpage deserializer
+ - @subpage parsers
+ - @subpage runtimeoptions
+ - @subpage serializer
+ - @subpage delegate
+ 
+**/
+}
+
+
+/// Create pages for each tool so they appear nicely in the doxygen tree-view. Subpages are not listed there.
+///
+/// Note: The parser, serializer and deserializer pages are created in 01_parsers.dox or 02_deserializer_serializer.dox
+namespace armnn
+{
+/**
+
+
+**/
+}
+

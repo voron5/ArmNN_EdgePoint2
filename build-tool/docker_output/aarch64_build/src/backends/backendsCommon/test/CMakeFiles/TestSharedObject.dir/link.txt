@@ -1,1 +1,0 @@
-/usr/bin/aarch64-linux-gnu-g++ -fPIC  -std=c++17 -Wall -Wextra -Werror -Wold-style-cast -Wno-missing-braces -Wconversion -Wsign-conversion  -Wno-psabi -O3 -DNDEBUG -DNDEBUG -O3 -shared  -o testSharedObject/libTestSharedObject.so CMakeFiles/TestSharedObject.dir/TestSharedObject.cpp.o  -L/home/arm-user/build/acl/aarch64_build/opencl-1.2-stubs 

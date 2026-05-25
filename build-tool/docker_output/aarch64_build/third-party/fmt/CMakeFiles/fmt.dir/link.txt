@@ -1,2 +1,0 @@
-/usr/bin/aarch64-linux-gnu-ar qc libfmt.a CMakeFiles/fmt.dir/src/format.cc.o
-/usr/bin/aarch64-linux-gnu-ranlib libfmt.a

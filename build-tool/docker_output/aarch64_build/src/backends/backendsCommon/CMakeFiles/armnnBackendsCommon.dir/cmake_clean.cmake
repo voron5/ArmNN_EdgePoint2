@@ -1,0 +1,41 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/armnnBackendsCommon.dir/DynamicBackend.cpp.o"
+  "CMakeFiles/armnnBackendsCommon.dir/DynamicBackend.cpp.o.d"
+  "CMakeFiles/armnnBackendsCommon.dir/DynamicBackendUtils.cpp.o"
+  "CMakeFiles/armnnBackendsCommon.dir/DynamicBackendUtils.cpp.o.d"
+  "CMakeFiles/armnnBackendsCommon.dir/IBackendInternal.cpp.o"
+  "CMakeFiles/armnnBackendsCommon.dir/IBackendInternal.cpp.o.d"
+  "CMakeFiles/armnnBackendsCommon.dir/ITensorHandleFactory.cpp.o"
+  "CMakeFiles/armnnBackendsCommon.dir/ITensorHandleFactory.cpp.o.d"
+  "CMakeFiles/armnnBackendsCommon.dir/LayerSupportBase.cpp.o"
+  "CMakeFiles/armnnBackendsCommon.dir/LayerSupportBase.cpp.o.d"
+  "CMakeFiles/armnnBackendsCommon.dir/MapWorkload.cpp.o"
+  "CMakeFiles/armnnBackendsCommon.dir/MapWorkload.cpp.o.d"
+  "CMakeFiles/armnnBackendsCommon.dir/MemCopyWorkload.cpp.o"
+  "CMakeFiles/armnnBackendsCommon.dir/MemCopyWorkload.cpp.o.d"
+  "CMakeFiles/armnnBackendsCommon.dir/MemImportWorkload.cpp.o"
+  "CMakeFiles/armnnBackendsCommon.dir/MemImportWorkload.cpp.o.d"
+  "CMakeFiles/armnnBackendsCommon.dir/MemSyncWorkload.cpp.o"
+  "CMakeFiles/armnnBackendsCommon.dir/MemSyncWorkload.cpp.o.d"
+  "CMakeFiles/armnnBackendsCommon.dir/MemoryManager.cpp.o"
+  "CMakeFiles/armnnBackendsCommon.dir/MemoryManager.cpp.o.d"
+  "CMakeFiles/armnnBackendsCommon.dir/OptimizationViews.cpp.o"
+  "CMakeFiles/armnnBackendsCommon.dir/OptimizationViews.cpp.o.d"
+  "CMakeFiles/armnnBackendsCommon.dir/TensorHandle.cpp.o"
+  "CMakeFiles/armnnBackendsCommon.dir/TensorHandle.cpp.o.d"
+  "CMakeFiles/armnnBackendsCommon.dir/TensorHandleFactoryRegistry.cpp.o"
+  "CMakeFiles/armnnBackendsCommon.dir/TensorHandleFactoryRegistry.cpp.o.d"
+  "CMakeFiles/armnnBackendsCommon.dir/UnmapWorkload.cpp.o"
+  "CMakeFiles/armnnBackendsCommon.dir/UnmapWorkload.cpp.o.d"
+  "CMakeFiles/armnnBackendsCommon.dir/WorkloadData.cpp.o"
+  "CMakeFiles/armnnBackendsCommon.dir/WorkloadData.cpp.o.d"
+  "CMakeFiles/armnnBackendsCommon.dir/WorkloadFactory.cpp.o"
+  "CMakeFiles/armnnBackendsCommon.dir/WorkloadFactory.cpp.o.d"
+  "CMakeFiles/armnnBackendsCommon.dir/WorkloadUtils.cpp.o"
+  "CMakeFiles/armnnBackendsCommon.dir/WorkloadUtils.cpp.o.d"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/armnnBackendsCommon.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

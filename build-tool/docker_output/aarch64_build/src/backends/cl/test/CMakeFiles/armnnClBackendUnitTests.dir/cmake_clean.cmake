@@ -1,0 +1,41 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClBackendTests.cpp.o"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClBackendTests.cpp.o.d"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClContextSerializerTests.cpp.o"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClContextSerializerTests.cpp.o.d"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClCreateWorkloadTests.cpp.o"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClCreateWorkloadTests.cpp.o.d"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClCustomAllocatorTests.cpp.o"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClCustomAllocatorTests.cpp.o.d"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClDefaultAllocatorTests.cpp.o"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClDefaultAllocatorTests.cpp.o.d"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClEndToEndTests.cpp.o"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClEndToEndTests.cpp.o.d"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClFallbackTests.cpp.o"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClFallbackTests.cpp.o.d"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClImportTensorHandleFactoryTests.cpp.o"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClImportTensorHandleFactoryTests.cpp.o.d"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClImportTensorHandleTests.cpp.o"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClImportTensorHandleTests.cpp.o.d"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClJsonPrinterTests.cpp.o"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClJsonPrinterTests.cpp.o.d"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClLayerSupportTests.cpp.o"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClLayerSupportTests.cpp.o.d"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClLayerTests.cpp.o"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClLayerTests.cpp.o.d"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClOptimizedNetworkTests.cpp.o"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClOptimizedNetworkTests.cpp.o.d"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClRuntimeTests.cpp.o"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ClRuntimeTests.cpp.o.d"
+  "CMakeFiles/armnnClBackendUnitTests.dir/Fp16SupportTest.cpp.o"
+  "CMakeFiles/armnnClBackendUnitTests.dir/Fp16SupportTest.cpp.o.d"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ICLTensorProxyTests.cpp.o"
+  "CMakeFiles/armnnClBackendUnitTests.dir/ICLTensorProxyTests.cpp.o.d"
+  "CMakeFiles/armnnClBackendUnitTests.dir/OpenClTimerTest.cpp.o"
+  "CMakeFiles/armnnClBackendUnitTests.dir/OpenClTimerTest.cpp.o.d"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/armnnClBackendUnitTests.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

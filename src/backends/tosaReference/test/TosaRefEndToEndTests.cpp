@@ -1,0 +1,1990 @@
+//
+// Copyright © 2022-2025 Arm Ltd and Contributors. All rights reserved.
+// SPDX-License-Identifier: MIT
+//
+
+#include "backendsCommon/test/EndToEndTestImpl.hpp"
+
+#include "backendsCommon/test/ActivationEndToEndTestImpl.hpp"
+#include "backendsCommon/test/AdditionEndToEndTestImpl.hpp"
+#include "backendsCommon/test/BatchMatMulEndToEndTestImpl.hpp"
+#include "backendsCommon/test/BatchSpaceOpsTestImpl.hpp"
+#include "backendsCommon/test/Convolution2dEndToEndTestImpl.hpp"
+#include "backendsCommon/test/Convolution3dEndToEndTestImpl.hpp"
+#include "backendsCommon/test/ConcatEndToEndTestImpl.hpp"
+#include <backendsCommon/test/DepthToSpaceEndToEndTestImpl.hpp>
+#include "backendsCommon/test/DepthwiseConvolution2dEndToEndTests.hpp"
+#include <backendsCommon/test/DequantizeEndToEndTestImpl.hpp>
+#include "backendsCommon/test/ElementwiseBinaryEndToEndTestImpl.hpp"
+#include "backendsCommon/test/ElementwiseUnaryEndToEndTestImpl.hpp"
+#include "backendsCommon/test/FullyConnectedEndToEndTestImpl.hpp"
+#include "backendsCommon/test/GatherEndToEndTestImpl.hpp"
+#include "backendsCommon/test/MeanEndToEndTestImpl.hpp"
+#include "backendsCommon/test/MultiplicationEndToEndTestImpl.hpp"
+#include "backendsCommon/test/PadEndToEndTestImpl.hpp"
+#include "backendsCommon/test/Pooling2dEndToEndTestImpl.hpp"
+#include "backendsCommon/test/PreluEndToEndTestImpl.hpp"
+#include "backendsCommon/test/QuantizationEndToEndTestImpl.hpp"
+#include "backendsCommon/test/ReduceEndToEndTestImpl.hpp"
+#include "backendsCommon/test/ReshapeEndToEndTestImpl.hpp"
+#include "backendsCommon/test/ResizeEndToEndTestImpl.hpp"
+#include "backendsCommon/test/SliceEndToEndTestImpl.hpp"
+#include "backendsCommon/test/SoftmaxEndToEndTestImpl.hpp"
+#include "backendsCommon/test/SplitterEndToEndTestImpl.hpp"
+#include "backendsCommon/test/StackEndToEndTestImpl.hpp"
+#include "backendsCommon/test/StridedSliceEndToEndTestImpl.hpp"
+#include "backendsCommon/test/SubtractionEndToEndTestImpl.hpp"
+#include "backendsCommon/test/TransposeConvolution2dEndToEndTestImpl.hpp"
+#include "backendsCommon/test/TransposeEndToEndTestImpl.hpp"
+
+#include <doctest/doctest.h>
+
+TEST_SUITE("TosaRefEndToEnd")
+{
+static std::vector<BackendId> tosaDefaultBackends = { "TosaRef" };
+
+// Activation
+// LeakyRelu
+TEST_CASE("TosaRefLeakyReluActivationFloat32")
+{
+    ActivationEndToEndTest<DataType::Float32>(tosaDefaultBackends,
+                                              ActivationFunction::LeakyReLu,
+                                              1.f,
+                                              0,
+                                              0.01f);
+}
+
+TEST_CASE("TosaRefLeakyReluActivationFloat16")
+{
+    ActivationEndToEndTest<DataType::Float16>(tosaDefaultBackends,
+                                              ActivationFunction::LeakyReLu,
+                                              0.3f,
+                                              5,
+                                              0.01f);
+}
+
+TEST_CASE("TosaRefLeakyReluActivationInt32")
+{
+    ActivationEndToEndTest<DataType::Signed32>(tosaDefaultBackends,
+                                               ActivationFunction::LeakyReLu,
+                                               0.15f,
+                                               0,
+                                               0.01f);
+}
+
+TEST_CASE("TosaRefLeakyReluActivationInt16")
+{
+    ActivationEndToEndTest<DataType::QSymmS16>(tosaDefaultBackends,
+                                               ActivationFunction::LeakyReLu,
+                                               0.35f,
+                                               0,
+                                               0.01f);
+}
+
+TEST_CASE("TosaRefLeakyReluActivationInt8")
+{
+    ActivationEndToEndTest<DataType::QAsymmS8>(tosaDefaultBackends,
+                                               ActivationFunction::LeakyReLu,
+                                               0.6f,
+                                               7,
+                                               0.01f);
+}
+
+TEST_CASE("UNSUPPORTED_ActivationUInt8")
+{
+    try
+    {
+        ActivationEndToEndTest<DataType::QAsymmU8>(tosaDefaultBackends,
+                                                   ActivationFunction::LeakyReLu,
+                                                   1.f,
+                                                   0,
+                                                   0.01f);
+        FAIL("An exception should have been thrown");
+    }
+    catch (armnn::Exception& e)
+    {
+        CHECK_EQ(std::string(e.what()), "Failed to assign a backend to each layer");
+    }
+}
+
+// Relu
+TEST_CASE("TosaRefReLuEndToEndTestQAsymmS8")
+{
+    ActivationEndToEndTest<armnn::DataType::QAsymmS8>(tosaDefaultBackends, ActivationFunction::ReLu);
+}
+
+TEST_CASE("TosaRefReLuEndToEndTestFloat32")
+{
+    ActivationEndToEndTest<armnn::DataType::Float32>(tosaDefaultBackends, ActivationFunction::ReLu);
+}
+
+TEST_CASE("TosaRefReLuEndToEndTestFloat16")
+{
+    ActivationEndToEndTest<armnn::DataType::Float16>(tosaDefaultBackends, ActivationFunction::ReLu);
+}
+
+TEST_CASE("TosaRefReLuEndToEndTestQSymmS16")
+{
+    ActivationEndToEndTest<armnn::DataType::QSymmS16>(tosaDefaultBackends, ActivationFunction::ReLu);
+}
+
+// Gelu
+TEST_CASE("TosaRefGeluEndToEndTestQAsymmS8")
+{
+    ActivationEndToEndTest<armnn::DataType::QAsymmS8>(tosaDefaultBackends, ActivationFunction::Gelu);
+}
+
+// HardSwish
+TEST_CASE("TosaRefHardSwishEndToEndTestQAsymmS8")
+{
+    ActivationEndToEndTest<armnn::DataType::QAsymmS8>(tosaDefaultBackends, ActivationFunction::HardSwish);
+}
+
+// PRelu
+TEST_CASE("TosaRefPreluEndToEndPosAlphaQuantizedTestInt8")
+{
+    PreluEndToEndPosIdQuantizedTest<armnn::DataType::QAsymmS8>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefPreluEndToEndNegSlopeQuantizedTestInt8")
+{
+    PreluEndToEndNegSlopeQuantizedTest<armnn::DataType::QAsymmS8>(tosaDefaultBackends);
+}
+
+// Sigmoid
+TEST_CASE("TosaRefSigmoidEndToEndTestFloat32")
+{
+    ActivationEndToEndTest<armnn::DataType::Float32>(tosaDefaultBackends, ActivationFunction::Sigmoid);
+}
+
+TEST_CASE("TosaRefSigmoidEndToEndTestFloat16")
+{
+    ActivationEndToEndTest<armnn::DataType::Float16>(tosaDefaultBackends, ActivationFunction::Sigmoid);
+}
+
+TEST_CASE("TosaRefSigmoidEndToEndTestQAsymmS8")
+{
+    ActivationEndToEndTest<armnn::DataType::QAsymmS8>(tosaDefaultBackends, ActivationFunction::Sigmoid);
+}
+
+// TanH
+TEST_CASE("TosaRefTanHEndToEndTestQAsymmS8")
+{
+    ActivationEndToEndTest<armnn::DataType::QAsymmS8>(tosaDefaultBackends, ActivationFunction::TanH);
+}
+
+// BoundedRelu
+TEST_CASE("TosaRefBoundedReLuEndToEndTestFloat32")
+{
+    ActivationEndToEndTest<armnn::DataType::Float32>(
+        tosaDefaultBackends, ActivationFunction::BoundedReLu, 1.0f, 0, 6.0f, 0.0f);
+}
+
+TEST_CASE("TosaRefBoundedReLuEndToEndTestFloat16")
+{
+    ActivationEndToEndTest<armnn::DataType::Float16>(
+        tosaDefaultBackends, ActivationFunction::BoundedReLu, 1.0f, 0, 6.0f, 0.0f);
+}
+
+TEST_CASE("TosaRefBoundedReLuEndToEndTestQAsymmS8")
+{
+    ActivationEndToEndTest<armnn::DataType::QAsymmS8>(
+        tosaDefaultBackends, ActivationFunction::BoundedReLu, 1.0f, 0, 6.0f, 0.0f);
+}
+
+TEST_CASE("TosaRefBoundedReLuEndToEndTestQSymmS16")
+{
+    ActivationEndToEndTest<armnn::DataType::QSymmS16>(
+        tosaDefaultBackends, ActivationFunction::BoundedReLu, 1.0f, 0, 6.0f, 0.0f);
+}
+
+// Addition
+TEST_CASE("TosaRefAdditionEndtoEndTestFloat32")
+{
+    AdditionEndToEnd<DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefAdditionEndtoEndTestInt32")
+{
+    AdditionEndToEnd<DataType::Signed32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefAdditionEndtoEndTestFloat16")
+{
+    AdditionEndToEndFloat16<DataType::Float16>(tosaDefaultBackends);
+}
+
+// BatchMatMul
+
+TEST_CASE("TosaRefBatchMatMulEndToEndFloat32Test")
+{
+    BatchMatMulEndToEnd<armnn::DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefBatchMatMulEndToEndInt8Test")
+{
+    BatchMatMulEndToEnd<armnn::DataType::QSymmS8>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefBatchMatMulEndToEndInt16Test")
+{
+    BatchMatMulEndToEnd<armnn::DataType::QSymmS16>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefBatchMatMulNoTransposeEndToEndFloat32Test")
+{
+    BatchMatMulNoTransposeEndToEnd<armnn::DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefBatchMatMulNoTransposeEndToEndInt8Test")
+{
+    BatchMatMulNoTransposeEndToEnd<armnn::DataType::QSymmS8>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefBatchMatMulNoTransposeEndToEndInt16Test")
+{
+    BatchMatMulNoTransposeEndToEnd<armnn::DataType::QSymmS16>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefBatchMatMulSimple4DEndToEndFloat32Test")
+{
+    BatchMatMulSimple4DEndToEnd<armnn::DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefBatchMatMulSimple4DEndToEndInt8Test")
+{
+    BatchMatMulSimple4DEndToEnd<armnn::DataType::QAsymmS8>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefBatchMatMulSimple4DEndToEndInt16Test")
+{
+    BatchMatMulSimple4DEndToEnd<armnn::DataType::QSymmS16>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefBatchMatMulNotSquareEndToEndFloat32Test")
+{
+    BatchMatMulNotSquareEndToEnd<armnn::DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefBatchMatMulNotSquareEndToEndInt8Test")
+{
+    BatchMatMulNotSquareEndToEnd<armnn::DataType::QAsymmS8>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefBatchMatMulNotSquareEndToEndInt16Test")
+{
+    BatchMatMulNotSquareEndToEnd<armnn::DataType::QSymmS16>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefBatchMatMul4DEndToEndFloat32Test")
+{
+    BatchMatMul4DEndToEnd<armnn::DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefBatchMatMul4DEndToEndInt8Test")
+{
+    BatchMatMul4DEndToEnd<armnn::DataType::QAsymmS8>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefBatchMatMul4DEndToEndInt16Test")
+{
+    BatchMatMul4DEndToEnd<armnn::DataType::QSymmS16>(tosaDefaultBackends);
+}
+
+// Concat
+TEST_CASE("TosaRefConcatEndToEndDim0TestFloat32")
+{
+    ConcatDim0EndToEnd<armnn::DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefConcatEndToEndDim0TestInt32")
+{
+    ConcatDim0EndToEnd<armnn::DataType::Signed32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefConcatEndToEndDim1TestFloat32")
+{
+    ConcatDim1EndToEnd<armnn::DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefConcatEndToEndDim1TestInt32")
+{
+    ConcatDim1EndToEnd<armnn::DataType::Signed32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefConcatEndToEndDim2TestFloat32")
+{
+    ConcatDim2EndToEnd<armnn::DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefConcatEndToEndDim2TestInt32")
+{
+    ConcatDim2EndToEnd<armnn::DataType::Signed32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefConcatEndToEndDim3TestFloat32")
+{
+    ConcatDim3EndToEnd<armnn::DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefConcatEndToEndDim3TestInt32")
+{
+    ConcatDim3EndToEnd<armnn::DataType::Signed32>(tosaDefaultBackends);
+}
+
+// Conv2d
+TEST_CASE("TosaRefConv2dEndtoEndTestFloat32")
+{
+    Convolution2dEndToEnd<armnn::DataType::Float32>(tosaDefaultBackends, armnn::DataLayout::NHWC);
+}
+
+TEST_CASE("TosaRefConv2dWithoutBiasEndtoEndTestFloat32")
+{
+    Convolution2dEndToEnd<armnn::DataType::Float32>(tosaDefaultBackends, armnn::DataLayout::NHWC, false);
+}
+
+TEST_CASE("TosaRefConv2dEndtoEndTestInt8")
+{
+    Convolution2dEndToEnd<armnn::DataType::QSymmS8,
+                          armnn::DataType::QSymmS8,
+                          armnn::DataType::Signed32>(tosaDefaultBackends, armnn::DataLayout::NHWC);
+}
+
+TEST_CASE("TosaRefConv2dWithoutBiasEndtoEndTestInt8")
+{
+    Convolution2dEndToEnd<armnn::DataType::QSymmS8,
+                          armnn::DataType::QSymmS8,
+                          armnn::DataType::Signed32>(tosaDefaultBackends, armnn::DataLayout::NHWC, false);
+}
+
+// Conv3d
+TEST_CASE("TosaRefConvolution3dFloat32Test")
+{
+    Convolution3dEndToEnd<armnn::DataType::Float32, armnn::DataType::Float32>(tosaDefaultBackends,
+                                                                              armnn::DataLayout::NDHWC);
+}
+
+TEST_CASE("TosaRefConvolution3dInt8Test")
+{
+    Convolution3dEndToEnd<armnn::DataType::QSymmS8, armnn::DataType::QSymmS8>(tosaDefaultBackends,
+                                                                              armnn::DataLayout::NDHWC);
+}
+
+// Test case for end-to-end testing of DepthwiseConvolution2d with float32 data type
+TEST_CASE("TosaRefDepthwiseConv2dEndtoEndTestInt8")
+{
+    // More test cases shall be added for DepthwiseConvolution2d, by changing
+    // descriptor parameters like stride, padding, dilation, etc. And also quantization values.
+
+    // Common input data for all DepthwiseConv2d tests
+    // The input data is a 4x4x2x2 tensor with 2 channels.
+    // The input data is designed to have a pattern that allows for easy verification of the output.
+    // This input data does not cover the corner cases of the DepthwiseConv2d operator.
+    std::vector<float> inputData =
+        {
+        0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 1.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f,
+        0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+        0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 1.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f,
+        0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f,
+        0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 1.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f,
+        0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f,
+
+        0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 1.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f,
+        0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f,
+        0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 1.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f,
+        0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f,
+        0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 1.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f,
+        0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f,
+        0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 1.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f,
+        0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f, 0.5f, 0.0f
+        };
+
+    SUBCASE("Baseline")
+    {
+        // Baseline test for DepthwiseConv2dEndToEnd with Int8 data type
+
+        // Layer attributes
+        DepthwiseConvolution2dDescriptor descriptor;
+        descriptor.m_PadLeft     = 0;
+        descriptor.m_PadRight    = 0;
+        descriptor.m_PadTop      = 1;
+        descriptor.m_PadBottom   = 1;
+        descriptor.m_StrideX     = 1;
+        descriptor.m_StrideY     = 1;
+        descriptor.m_BiasEnabled = true;
+        descriptor.m_DataLayout  = armnn::DataLayout::NHWC;
+
+        // Expected output data
+        std::vector<float> expectedOutputData = std::vector<float>(
+        {
+            3.0f,  4.5f,  2.0f,  1.0f,  3.0f,  4.5f,  3.0f,  1.0f,  3.0f,  4.5f,  4.0f,  3.0f,  3.0f,  4.5f,
+            1.0f, -1.0f,  3.0f,  4.5f,  1.0f, -1.0f,  3.0f,  4.5f,  1.0f, -1.0f,  3.0f,  4.5f,  1.0f, -1.0f,
+            3.0f,  4.5f,  1.0f, -1.0f,  3.0f,  4.5f,  1.0f, -1.0f,  3.0f,  4.5f,  1.0f, -1.0f,  3.0f,  4.5f,
+            1.0f, -1.0f,  3.0f,  4.5f,  1.0f, -1.0f,  3.0f,  4.5f,  1.0f, -1.0f,  3.0f,  4.5f,  1.0f, -1.0f,
+            3.0f,  5.5f,  3.0f,  2.0f,  3.0f,  5.5f,  4.0f,  2.0f,  3.0f,  5.5f,  5.0f,  4.0f,  3.0f,  5.5f,
+            1.0f, -1.0f,  3.0f,  5.5f,  1.0f, -1.0f,  3.0f,  5.5f,  1.0f, -1.0f,  3.0f,  5.5f,  1.0f, -1.0f,
+
+            3.0f,  5.5f,  1.0f, -1.0f,  3.0f,  5.5f,  1.0f, -1.0f,  3.0f,  5.5f,  1.0f, -1.0f,  3.0f,  5.5f,
+            1.0f, -1.0f,  3.0f,  5.5f,  1.0f, -1.0f,  3.0f,  5.5f,  1.0f, -1.0f,  3.0f,  5.5f,  1.0f, -1.0f,
+            5.0f,  6.5f,  3.0f,  2.0f,  5.0f,  6.5f,  4.0f,  2.0f,  5.0f,  6.5f,  5.0f,  4.0f,  5.0f,  6.5f,
+            1.0f, -1.0f,  5.0f,  6.5f,  1.0f, -1.0f,  5.0f,  6.5f,  1.0f, -1.0f,  5.0f,  6.5f,  1.0f, -1.0f,
+            5.0f,  6.5f,  1.0f, -1.0f,  5.0f,  6.5f,  1.0f, -1.0f,  5.0f,  6.5f,  1.0f, -1.0f,  5.0f,  6.5f,
+            1.0f, -1.0f,  5.0f,  6.5f,  1.0f, -1.0f,  5.0f,  6.5f,  1.0f, -1.0f,  5.0f,  6.5f,  1.0f, -1.0f,
+
+            5.5f,  8.0f,  3.0f,  2.0f,  5.5f,  8.0f,  4.0f,  2.0f,  5.5f,  8.0f,  5.0f,  4.0f,  5.5f,  8.0f,
+            1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,
+            5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,
+            1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,
+            5.5f,  8.0f,  3.0f,  2.0f,  5.5f,  8.0f,  4.0f,  2.0f,  5.5f,  8.0f,  5.0f,  4.0f,  5.5f,  8.0f,
+            1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,
+
+            5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,
+            1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,
+            5.0f,  8.0f,  3.0f,  2.0f,  5.0f,  8.0f,  4.0f,  2.0f,  5.0f,  8.0f,  5.0f,  4.0f,  5.0f,  8.0f,
+            1.0f, -1.0f,  5.0f,  8.0f,  1.0f, -1.0f,  5.0f,  8.0f,  1.0f, -1.0f,  5.0f,  8.0f,  1.0f, -1.0f,
+            5.0f,  8.0f,  1.0f, -1.0f,  5.0f,  8.0f,  1.0f, -1.0f,  5.0f,  8.0f,  1.0f, -1.0f,  5.0f,  8.0f,
+            1.0f, -1.0f,  5.0f,  8.0f,  1.0f, -1.0f,  5.0f,  8.0f,  1.0f, -1.0f,  5.0f,  8.0f,  1.0f, -1.0f
+        } );
+
+        // Run the end-to-end test for DepthwiseConv2d with Int8 data type
+        DepthwiseConvolution2dEndToEnd<armnn::DataType::QSymmS8,
+                                   armnn::DataType::Signed32>(tosaDefaultBackends,
+                                                              descriptor,
+                                                              inputData,
+                                                              expectedOutputData);
+
+    }
+    SUBCASE("NoBias")
+    {
+        // Test for DepthwiseConv2dEndToEnd with Int8 data type without bias
+
+        // Layer attributes
+        DepthwiseConvolution2dDescriptor descriptor;
+        descriptor.m_PadLeft     = 0;
+        descriptor.m_PadRight    = 0;
+        descriptor.m_PadTop      = 1;
+        descriptor.m_PadBottom   = 1;
+        descriptor.m_StrideX     = 1;
+        descriptor.m_StrideY     = 1;
+        descriptor.m_BiasEnabled = false;
+        descriptor.m_DataLayout  = armnn::DataLayout::NHWC;
+
+        // Expected output data
+        std::vector<float> expectedOutputData = std::vector<float>(
+        {
+            3.0f,  2.5f,  1.0f,  2.0f,  3.0f,  2.5f,  2.0f,  2.0f,  3.0f,  2.5f,  3.0f,  4.0f,  3.0f,  2.5f,
+            0.0f,  0.0f,  3.0f,  2.5f,  0.0f,  0.0f,  3.0f,  2.5f,  0.0f,  0.0f,  3.0f,  2.5f,  0.0f,  0.0f,
+            3.0f,  2.5f,  0.0f,  0.0f,  3.0f,  2.5f,  0.0f,  0.0f,  3.0f,  2.5f,  0.0f,  0.0f,  3.0f,  2.5f,
+            0.0f,  0.0f,  3.0f,  2.5f,  0.0f,  0.0f,  3.0f,  2.5f,  0.0f,  0.0f,  3.0f,  2.5f,  0.0f,  0.0f,
+            3.0f,  3.5f,  2.0f,  3.0f,  3.0f,  3.5f,  3.0f,  3.0f,  3.0f,  3.5f,  4.0f,  5.0f,  3.0f,  3.5f,
+            0.0f,  0.0f,  3.0f,  3.5f,  0.0f,  0.0f,  3.0f,  3.5f,  0.0f,  0.0f,  3.0f,  3.5f,  0.0f,  0.0f,
+
+            3.0f,  3.5f,  0.0f,  0.0f,  3.0f,  3.5f,  0.0f,  0.0f,  3.0f,  3.5f,  0.0f,  0.0f,  3.0f,  3.5f,
+            0.0f,  0.0f,  3.0f,  3.5f,  0.0f,  0.0f,  3.0f,  3.5f,  0.0f,  0.0f,  3.0f,  3.5f,  0.0f,  0.0f,
+            5.0f,  4.5f,  2.0f,  3.0f,  5.0f,  4.5f,  3.0f,  3.0f,  5.0f,  4.5f,  4.0f,  5.0f,  5.0f,  4.5f,
+            0.0f,  0.0f,  5.0f,  4.5f,  0.0f,  0.0f,  5.0f,  4.5f,  0.0f,  0.0f,  5.0f,  4.5f,  0.0f,  0.0f,
+            5.0f,  4.5f,  0.0f,  0.0f,  5.0f,  4.5f,  0.0f,  0.0f,  5.0f,  4.5f,  0.0f,  0.0f,  5.0f,  4.5f,
+            0.0f,  0.0f,  5.0f,  4.5f,  0.0f,  0.0f,  5.0f,  4.5f,  0.0f,  0.0f,  5.0f,  4.5f,  0.0f,  0.0f,
+
+            5.5f,  6.0f,  2.0f,  3.0f,  5.5f,  6.0f,  3.0f,  3.0f,  5.5f,  6.0f,  4.0f,  5.0f,  5.5f,  6.0f,
+            0.0f,  0.0f,  5.5f,  6.0f,  0.0f,  0.0f,  5.5f,  6.0f,  0.0f,  0.0f,  5.5f,  6.0f,  0.0f,  0.0f,
+            5.5f,  6.0f,  0.0f,  0.0f,  5.5f,  6.0f,  0.0f,  0.0f,  5.5f,  6.0f,  0.0f,  0.0f,  5.5f,  6.0f,
+            0.0f,  0.0f,  5.5f,  6.0f,  0.0f,  0.0f,  5.5f,  6.0f,  0.0f,  0.0f,  5.5f,  6.0f,  0.0f,  0.0f,
+            5.5f,  6.0f,  2.0f,  3.0f,  5.5f,  6.0f,  3.0f,  3.0f,  5.5f,  6.0f,  4.0f,  5.0f,  5.5f,  6.0f,
+            0.0f,  0.0f,  5.5f,  6.0f,  0.0f,  0.0f,  5.5f,  6.0f,  0.0f,  0.0f,  5.5f,  6.0f,  0.0f,  0.0f,
+
+            5.5f,  6.0f,  0.0f,  0.0f,  5.5f,  6.0f,  0.0f,  0.0f,  5.5f,  6.0f,  0.0f,  0.0f,  5.5f,  6.0f,
+            0.0f,  0.0f,  5.5f,  6.0f,  0.0f,  0.0f,  5.5f,  6.0f,  0.0f,  0.0f,  5.5f,  6.0f,  0.0f,  0.0f,
+            5.0f,  6.0f,  2.0f,  3.0f,  5.0f,  6.0f,  3.0f,  3.0f,  5.0f,  6.0f,  4.0f,  5.0f,  5.0f,  6.0f,
+            0.0f,  0.0f,  5.0f,  6.0f,  0.0f,  0.0f,  5.0f,  6.0f,  0.0f,  0.0f,  5.0f,  6.0f,  0.0f,  0.0f,
+            5.0f,  6.0f,  0.0f,  0.0f,  5.0f,  6.0f,  0.0f,  0.0f,  5.0f,  6.0f,  0.0f,  0.0f,  5.0f,  6.0f,
+            0.0f,  0.0f,  5.0f,  6.0f,  0.0f,  0.0f,  5.0f,  6.0f,  0.0f,  0.0f,  5.0f,  6.0f,  0.0f,  0.0f
+        });
+
+        // Run the end-to-end test for DepthwiseConv2d with Int8 data type without bias
+        DepthwiseConvolution2dEndToEnd<armnn::DataType::QSymmS8,
+                                   armnn::DataType::Signed32>(tosaDefaultBackends,
+                                                              descriptor,
+                                                              inputData,
+                                                              expectedOutputData);
+    }
+    SUBCASE("QuantizationScale")
+    {
+        // Test for DepthwiseConv2dEndToEnd with Int8 data type with quantization scale and bias
+
+        // Quantization parameters
+        float qScale   = 0.05f;
+        int32_t qBias  = 60;
+
+        // Layer attributes
+        DepthwiseConvolution2dDescriptor descriptor;
+        descriptor.m_PadLeft     = 0;
+        descriptor.m_PadRight    = 0;
+        descriptor.m_PadTop      = 1;
+        descriptor.m_PadBottom   = 1;
+        descriptor.m_StrideX     = 1;
+        descriptor.m_StrideY     = 1;
+        descriptor.m_BiasEnabled = true;
+        descriptor.m_DataLayout  = armnn::DataLayout::NHWC;
+
+        // Expected output data with quantization scale and bias
+        std::vector<float> expectedOutputData = std::vector<float>(
+        {
+            3.0f,  4.5f,  2.0f,  1.0f,  3.0f,  4.5f,  3.0f,  1.0f,  3.0f,  4.5f,  4.0f,  3.0f,  3.0f,  4.5f,
+            1.0f, -1.0f,  3.0f,  4.5f,  1.0f, -1.0f,  3.0f,  4.5f,  1.0f, -1.0f,  3.0f,  4.5f,  1.0f, -1.0f,
+            3.0f,  4.5f,  1.0f, -1.0f,  3.0f,  4.5f,  1.0f, -1.0f,  3.0f,  4.5f,  1.0f, -1.0f,  3.0f,  4.5f,
+            1.0f, -1.0f,  3.0f,  4.5f,  1.0f, -1.0f,  3.0f,  4.5f,  1.0f, -1.0f,  3.0f,  4.5f,  1.0f, -1.0f,
+            3.0f,  5.5f,  3.0f,  2.0f,  3.0f,  5.5f,  4.0f,  2.0f,  3.0f,  5.5f,  5.0f,  4.0f,  3.0f,  5.5f,
+            1.0f, -1.0f,  3.0f,  5.5f,  1.0f, -1.0f,  3.0f,  5.5f,  1.0f, -1.0f,  3.0f,  5.5f,  1.0f, -1.0f,
+
+            3.0f,  5.5f,  1.0f, -1.0f,  3.0f,  5.5f,  1.0f, -1.0f,  3.0f,  5.5f,  1.0f, -1.0f,  3.0f,  5.5f,
+            1.0f, -1.0f,  3.0f,  5.5f,  1.0f, -1.0f,  3.0f,  5.5f,  1.0f, -1.0f,  3.0f,  5.5f,  1.0f, -1.0f,
+            5.0f,  6.5f,  3.0f,  2.0f,  5.0f,  6.5f,  4.0f,  2.0f,  5.0f,  6.5f,  5.0f,  4.0f,  5.0f,  6.5f,
+            1.0f, -1.0f,  5.0f,  6.5f,  1.0f, -1.0f,  5.0f,  6.5f,  1.0f, -1.0f,  5.0f,  6.5f,  1.0f, -1.0f,
+            5.0f,  6.5f,  1.0f, -1.0f,  5.0f,  6.5f,  1.0f, -1.0f,  5.0f,  6.5f,  1.0f, -1.0f,  5.0f,  6.5f,
+            1.0f, -1.0f,  5.0f,  6.5f,  1.0f, -1.0f,  5.0f,  6.5f,  1.0f, -1.0f,  5.0f,  6.5f,  1.0f, -1.0f,
+
+            5.5f,  8.0f,  3.0f,  2.0f,  5.5f,  8.0f,  4.0f,  2.0f,  5.5f,  8.0f,  5.0f,  4.0f,  5.5f,  8.0f,
+            1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,
+            5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,
+            1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,
+            5.5f,  8.0f,  3.0f,  2.0f,  5.5f,  8.0f,  4.0f,  2.0f,  5.5f,  8.0f,  5.0f,  4.0f,  5.5f,  8.0f,
+            1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,
+
+            5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,
+            1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,  5.5f,  8.0f,  1.0f, -1.0f,
+            5.0f,  8.0f,  3.0f,  2.0f,  5.0f,  8.0f,  4.0f,  2.0f,  5.0f,  8.0f,  5.0f,  4.0f,  5.0f,  8.0f,
+            1.0f, -1.0f,  5.0f,  8.0f,  1.0f, -1.0f,  5.0f,  8.0f,  1.0f, -1.0f,  5.0f,  8.0f,  1.0f, -1.0f,
+            5.0f,  8.0f,  1.0f, -1.0f,  5.0f,  8.0f,  1.0f, -1.0f,  5.0f,  8.0f,  1.0f, -1.0f,  5.0f,  8.0f,
+            1.0f, -1.0f,  5.0f,  8.0f,  1.0f, -1.0f,  5.0f,  8.0f,  1.0f, -1.0f,  5.0f,  8.0f,  1.0f, -1.0f
+        } );
+
+        // Run the end-to-end test for DepthwiseConv2d with Int8 data type with quantization scale and bias
+        DepthwiseConvolution2dEndToEnd<armnn::DataType::QSymmS8,
+                                   armnn::DataType::Signed32>(tosaDefaultBackends,
+                                                              descriptor,
+                                                              inputData,
+                                                              expectedOutputData,
+                                                              qScale,
+                                                              qBias);
+    }
+
+}
+
+// Elementwise Binary
+//Add
+TEST_CASE("TosaRefAddEndtoEndTestInt32")
+{
+    ElementwiseBinarySimpleNoReshapeEndToEnd<DataType::Signed32>(tosaDefaultBackends,
+                                                                 armnn::BinaryOperation::Add);
+}
+
+TEST_CASE("TosaRefAddEndtoEndTestInt8")
+{
+    ElementwiseBinarySimpleNoReshapeEndToEnd<DataType::QSymmS8>(tosaDefaultBackends, armnn::BinaryOperation::Add);
+}
+
+// Test case for corner case, duplicate tensor issue
+TEST_CASE("TosaRefAddDuplicateTensorEndtoEndTestInt8")
+{
+    ElementwiseBinarySimpleNoReshapeDuplicateTensorEndToEnd<DataType::QSymmS8>(tosaDefaultBackends,
+                                                                               armnn::BinaryOperation::Add);
+}
+
+TEST_CASE("TosaRefAddDifferentScalesEndToEndTestInt8")
+{
+    ElementwiseBinarySimpleWithScalesEndToEnd<armnn::DataType::QSymmS8>(tosaDefaultBackends, BinaryOperation::Add);
+}
+
+// Maximum
+TEST_CASE("TosaRefMaximumEndtoEndTestInt32")
+{
+    ElementwiseBinarySimpleNoReshapeEndToEnd<DataType::Signed32>(tosaDefaultBackends, armnn::BinaryOperation::Maximum);
+}
+
+TEST_CASE("TosaRefMaximumEndtoEndTestInt8")
+{
+    ElementwiseBinarySimpleNoReshapeEndToEnd<DataType::QSymmS8>(tosaDefaultBackends, armnn::BinaryOperation::Maximum);
+}
+
+//Mul
+TEST_CASE("TosaRefMulEndtoEndTestInt32")
+{
+    ElementwiseBinarySimpleNoReshapeEndToEnd<DataType::Signed32>(tosaDefaultBackends, armnn::BinaryOperation::Mul);
+}
+
+TEST_CASE("TosaRefMulEndtoEndTestInt8")
+{
+    ElementwiseBinarySimpleNoReshapeEndToEnd<DataType::QSymmS8>(tosaDefaultBackends, armnn::BinaryOperation::Mul);
+}
+
+//Sub
+TEST_CASE("TosaRefSubEndtoEndTestInt32")
+{
+    ElementwiseBinarySimpleNoReshapeEndToEnd<DataType::Signed32>(tosaDefaultBackends, armnn::BinaryOperation::Sub);
+}
+
+TEST_CASE("TosaRefSubEndtoEndTestInt8")
+{
+    ElementwiseBinarySimpleNoReshapeEndToEnd<DataType::QSymmS8>(tosaDefaultBackends, armnn::BinaryOperation::Sub);
+}
+
+TEST_CASE("TosaRefSubDifferentScalesEndToEndTestInt8")
+{
+    ElementwiseBinarySimpleWithScalesEndToEnd<armnn::DataType::QSymmS8>(tosaDefaultBackends, BinaryOperation::Sub);
+}
+
+// FullyConnected
+TEST_CASE("TosaRefFullyConnectedEndToEndTestFloat32")
+{
+    FullyConnectedConstantWeightsAndBiasEndToEnd<armnn::DataType::Float32>(tosaDefaultBackends, true);
+}
+
+TEST_CASE("TosaRefFullyConnectedEndToEndTestNoBiasFloat32")
+{
+    FullyConnectedConstantWeightsAndBiasEndToEnd<armnn::DataType::Float32>(tosaDefaultBackends, false);
+}
+
+TEST_CASE("TosaRefFullyConnectedEndToEndTestInt8")
+{
+    FullyConnectedConstantWeightsAndBiasEndToEnd<armnn::DataType::QAsymmS8,
+                                                 armnn::DataType::QAsymmS8,
+                                                 armnn::DataType::Signed32,
+                                                 armnn::DataType::QAsymmS8>(tosaDefaultBackends, true);
+}
+
+TEST_CASE("TosaRefFullyConnectedEndToEndTestNoBiasInt8")
+{
+    FullyConnectedConstantWeightsAndBiasEndToEnd<armnn::DataType::QAsymmS8,
+                                                 armnn::DataType::QAsymmS8,
+                                                 armnn::DataType::Signed32,
+                                                 armnn::DataType::QAsymmS8>(tosaDefaultBackends, false);
+}
+
+TEST_CASE("TosaRefFullyConnectedEndToEndTestInt8Symm")
+{
+    FullyConnectedConstantWeightsAndBiasEndToEnd<armnn::DataType::QSymmS8,
+                                                 armnn::DataType::QSymmS8,
+                                                 armnn::DataType::Signed32,
+                                                 armnn::DataType::QSymmS8>(tosaDefaultBackends, true);
+}
+
+TEST_CASE("TosaRefFullyConnectedEndToEndTestNoBiasInt8Symm")
+{
+    FullyConnectedConstantWeightsAndBiasEndToEnd<armnn::DataType::QSymmS8,
+                                                 armnn::DataType::QSymmS8,
+                                                 armnn::DataType::Signed32,
+                                                 armnn::DataType::QSymmS8>(tosaDefaultBackends, false);
+}
+
+// Gather
+TEST_CASE("TosaRefGatherFloatTest")
+{
+    GatherEndToEnd<armnn::DataType::Float32>(tosaDefaultBackends);
+}
+TEST_CASE("TosaRefGatherInt16Test")
+{
+    GatherEndToEnd<armnn::DataType::QSymmS16>(tosaDefaultBackends);
+}
+TEST_CASE("TosaRefGatherInt8Test")
+{
+    GatherEndToEnd<armnn::DataType::QAsymmS8>(tosaDefaultBackends);
+}
+TEST_CASE("TosaRefGatherMultiDimFloatTest")
+{
+    GatherMultiDimEndToEnd<armnn::DataType::Float32>(tosaDefaultBackends);
+}
+TEST_CASE("TosaRefGatherMultiDimInt16Test")
+{
+    GatherMultiDimEndToEnd<armnn::DataType::QSymmS16>(tosaDefaultBackends);
+}
+TEST_CASE("TosaRefGatherMultiDimInt8Test")
+{
+    int axis;
+    SUBCASE("Axis0")
+    {
+        axis=0;
+    }
+    SUBCASE("Axis1")
+    {
+        axis=1;
+    }
+    SUBCASE("Axis2")
+    {
+        axis=2;
+    }
+    GatherMultiDimEndToEnd<armnn::DataType::QAsymmS8>(tosaDefaultBackends, axis);
+}
+
+// Pad
+TEST_CASE("TosaRefPadEndToEndFloat32Test")
+{
+    PadEndToEnd<armnn::DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefPadEndToEndInt8Test")
+{
+    PadEndToEnd<armnn::DataType::QSymmS8>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefPad4dEndToEndFloat32Test")
+{
+    Pad4dEndToEnd<armnn::DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefPad4dEndToEndInt8Test")
+{
+    Pad4dEndToEnd<armnn::DataType::QSymmS8>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefPad4dEndToEndInt32Test")
+{
+    Pad4dEndToEnd<armnn::DataType::Signed32>(tosaDefaultBackends);
+}
+
+// Pooling
+// Average Pool 2D
+TEST_CASE("TosaRefAvgPool2DEndtoEndTestFloat32")
+{
+    AvgPool2dEndToEnd<DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefAvgPool2DEndtoEndTestFloat16")
+{
+    AvgPool2dEndToEndFloat16<DataType::Float16>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefAvgPool2DIgnoreValueEndtoEndTestFloat32")
+{
+    AvgPool2dEndToEnd<DataType::Float32>(tosaDefaultBackends, PaddingMethod::IgnoreValue);
+}
+
+// Max Pool 2D
+TEST_CASE("TosaRefMaxPool2DEndtoEndTestFloat32")
+{
+    MaxPool2dEndToEnd<DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefMaxPool2DEndtoEndTestFloat16")
+{
+    MaxPool2dEndToEndFloat16<DataType::Float16>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefMaxPool2DIgnoreValueEndtoEndTestFloat32")
+{
+    MaxPool2dEndToEnd<DataType::Float32>(tosaDefaultBackends, PaddingMethod::IgnoreValue);
+}
+
+TEST_CASE("TosaRefMaxPool2DTwoLayerEndtoEndTestFloat32")
+{
+    MaxPool2dTwoLayerEndToEnd<DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefMaxPool2DThreeLayerEndtoEndTestFloat32")
+{
+    MaxPool2dThreeLayerEndToEnd<DataType::Float32>(tosaDefaultBackends);
+}
+
+// Mean
+TEST_CASE("TosaRefMeanEndToEndFloat16Test")
+{
+    MeanEndToEnd<armnn::DataType::Float16>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefMeanEndToEndFloat16TestWithKeepDims")
+{
+    MeanEndToEnd<armnn::DataType::Float16>(tosaDefaultBackends, true);
+}
+
+TEST_CASE("TosaRefMeanEndToEndFloat32Test")
+{
+    MeanEndToEnd<armnn::DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefMeanEndToEndFloat32TestWithKeepDims")
+{
+    MeanEndToEnd<armnn::DataType::Float32>(tosaDefaultBackends, true);
+}
+
+TEST_CASE("TosaRefMeanEndToEndInt8Test")
+{
+    MeanEndToEnd<armnn::DataType::QSymmS8>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefMeanEndToEndInt8TestWithKeepDims")
+{
+    MeanEndToEnd<armnn::DataType::QSymmS8>(tosaDefaultBackends, true);
+}
+
+// Quantization
+TEST_CASE("TosaRefQuantizeFromFloat32ToInt8")
+{
+    QuantizationEndToEndFloat32<DataType::QAsymmS8>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefQuantizeFromFloat32ToInt16")
+{
+    QuantizationEndToEndFloat32<DataType::QSymmS16>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefQuantizeFromFloat32ToInt32")
+{
+    QuantizationEndToEndFloat32<DataType::Signed32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefQuantizeFromFloat16ToInt8")
+{
+    QuantizationEndToEndFloat16<DataType::QAsymmS8>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefQuantizeFromFloat16ToInt16")
+{
+    QuantizationEndToEndFloat16<DataType::QSymmS16>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefQuantizeFromFloat16ToInt32")
+{
+    QuantizationEndToEndFloat16<DataType::Signed32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefQuantizeInt8")
+{
+    QuantizationEndToEndInt8(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefQuantizeInt8ToUInt8")
+{
+    QuantizationEndToEndInt8ToUInt8(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefQuantizeUInt8ToInt8")
+{
+    QuantizationEndToEndUInt8ToInt8(tosaDefaultBackends);
+}
+
+// Dequantize
+TEST_CASE("TosaRefDequantizeEndToEndSimpleTest")
+{
+    DequantizeEndToEndSimple<DataType::QAsymmS8>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefDequantizeEndToEndOffsetTest")
+{
+    DequantizeEndToEndOffset<DataType::QAsymmS8>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefDequantizeEndToEndSimpleInt16Test")
+{
+    DequantizeEndToEndSimple<DataType::QSymmS16>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefDequantizeEndToEndOffsetInt16Test")
+{
+    DequantizeEndToEndOffset<DataType::QSymmS16>(tosaDefaultBackends);
+}
+
+// DepthToSpace
+TEST_CASE("TosaRefDepthToSpaceEndToEndNhwcFloat32")
+{
+    DepthToSpaceEndToEnd<armnn::DataType::Float32>(tosaDefaultBackends, armnn::DataLayout::NHWC);
+}
+
+TEST_CASE("TosaRefDepthToSpaceEndToEndNhwcFloat16")
+{
+    DepthToSpaceEndToEnd<armnn::DataType::Float16>(tosaDefaultBackends, armnn::DataLayout::NHWC);
+}
+
+TEST_CASE("TosaRefDepthToSpaceEndToEndNhwcInt8")
+{
+    DepthToSpaceEndToEnd<armnn::DataType::QAsymmS8>(tosaDefaultBackends, armnn::DataLayout::NHWC);
+}
+
+TEST_CASE("TosaRefDepthToSpaceEndToEndNhwcInt16")
+{
+    DepthToSpaceEndToEnd<armnn::DataType::QSymmS16>(tosaDefaultBackends, armnn::DataLayout::NHWC);
+}
+
+TEST_CASE("TosaRefDepthToSpaceEndToEndNhwcSigned32")
+{
+    DepthToSpaceEndToEnd<armnn::DataType::Signed32>(tosaDefaultBackends, armnn::DataLayout::NHWC);
+}
+
+// Reduce
+// Reduce Sum
+TEST_CASE("TosaRefReduceSum2dEndtoEndTestSigned32")
+{
+    ReduceEndToEnd2d<DataType::Signed32>(tosaDefaultBackends, ReduceOperation::Sum);
+}
+
+TEST_CASE("TosaRefReduceSum2dEndtoEndTestSigned32WithKeepDims")
+{
+    ReduceEndToEnd2d<DataType::Signed32>(tosaDefaultBackends, ReduceOperation::Sum, true);
+}
+
+TEST_CASE("TosaRefReduceSum2dEndtoEndTestFloat16")
+{
+    ReduceEndToEnd2d<DataType::Float16>(tosaDefaultBackends, ReduceOperation::Sum);
+}
+
+TEST_CASE("TosaRefReduceSum2dEndtoEndTestFloat16WithKeepDims")
+{
+    ReduceEndToEnd2d<DataType::Float16>(tosaDefaultBackends, ReduceOperation::Sum, true);
+}
+
+TEST_CASE("TosaRefReduceSum2dEndtoEndTestFloat32")
+{
+    ReduceEndToEnd2d<DataType::Float32>(tosaDefaultBackends, ReduceOperation::Sum);
+}
+
+TEST_CASE("TosaRefReduceSum2dEndtoEndTestFloat32WithKeepDims")
+{
+    ReduceEndToEnd2d<DataType::Float32>(tosaDefaultBackends, ReduceOperation::Sum, true);
+}
+
+TEST_CASE("TosaRefReduceSum2dEndtoEndTestInt8")
+{
+    ReduceEndToEnd2d<DataType::QAsymmS8>(tosaDefaultBackends, ReduceOperation::Sum);
+}
+
+TEST_CASE("TosaRefReduceSum2dEndtoEndTestInt8WithKeepDims")
+{
+    ReduceEndToEnd2d<DataType::QAsymmS8>(tosaDefaultBackends, ReduceOperation::Sum, true);
+}
+
+TEST_CASE("TosaRefReduceSum3dEndtoEndTestSigned32")
+{
+    ReduceEndToEnd3d<DataType::Signed32>(tosaDefaultBackends, ReduceOperation::Sum);
+}
+
+TEST_CASE("TosaRefReduceSum3dEndtoEndTestSigned32WithKeepDims")
+{
+    ReduceEndToEnd3d<DataType::Signed32>(tosaDefaultBackends, ReduceOperation::Sum, true);
+}
+
+TEST_CASE("TosaRefReduceSum3dEndtoEndTestFloat16")
+{
+    ReduceEndToEnd3d<DataType::Float16>(tosaDefaultBackends, ReduceOperation::Sum);
+}
+
+TEST_CASE("TosaRefReduceSum3dEndtoEndTestFloat16WithKeepDims")
+{
+    ReduceEndToEnd3d<DataType::Float16>(tosaDefaultBackends, ReduceOperation::Sum, true);
+}
+
+TEST_CASE("TosaRefReduceSum3dEndtoEndTestFloat32")
+{
+    ReduceEndToEnd3d<DataType::Float32>(tosaDefaultBackends, ReduceOperation::Sum);
+}
+
+TEST_CASE("TosaRefReduceSum3dEndtoEndTestFloat32WithKeepDims")
+{
+    ReduceEndToEnd3d<DataType::Float32>(tosaDefaultBackends, ReduceOperation::Sum, true);
+}
+
+TEST_CASE("TosaRefReduceSum3dEndtoEndTestInt8")
+{
+    ReduceEndToEnd3d<DataType::QAsymmS8>(tosaDefaultBackends, ReduceOperation::Sum);
+}
+
+TEST_CASE("TosaRefReduceSum3dEndtoEndTestInt8WithKeepDims")
+{
+    ReduceEndToEnd3d<DataType::QAsymmS8>(tosaDefaultBackends, ReduceOperation::Sum, true);
+}
+
+TEST_CASE("TosaRefReduceSum4dEndtoEndTestSigned32")
+{
+    ReduceEndToEnd4d<DataType::Signed32>(tosaDefaultBackends, ReduceOperation::Sum);
+}
+
+TEST_CASE("TosaRefReduceSum4dEndtoEndTestSigned32WithKeepDims")
+{
+    ReduceEndToEnd4d<DataType::Signed32>(tosaDefaultBackends, ReduceOperation::Sum, true);
+}
+
+TEST_CASE("TosaRefReduceSum4dEndtoEndTestFloat16")
+{
+    ReduceEndToEnd4d<DataType::Float16>(tosaDefaultBackends, ReduceOperation::Sum);
+}
+
+TEST_CASE("TosaRefReduceSum4dEndtoEndTestFloat16WithKeepDims")
+{
+    ReduceEndToEnd4d<DataType::Float16>(tosaDefaultBackends, ReduceOperation::Sum, true);
+}
+
+TEST_CASE("TosaRefReduceSum4dEndtoEndTestFloat32")
+{
+    ReduceEndToEnd4d<DataType::Float32>(tosaDefaultBackends, ReduceOperation::Sum);
+}
+
+TEST_CASE("TosaRefReduceSum4dEndtoEndTestFloat32WithKeepDims")
+{
+    ReduceEndToEnd4d<DataType::Float32>(tosaDefaultBackends, ReduceOperation::Sum, true);
+}
+
+TEST_CASE("TosaRefReduceSum4dEndtoEndTestInt8")
+{
+    ReduceEndToEnd4d<DataType::QAsymmS8>(tosaDefaultBackends, ReduceOperation::Sum);
+}
+
+TEST_CASE("TosaRefReduceSum4dEndtoEndTestInt8WithKeepDims")
+{
+    ReduceEndToEnd4d<DataType::QAsymmS8>(tosaDefaultBackends, ReduceOperation::Sum, true);
+}
+
+// Reduce Mean
+TEST_CASE("TosaRefReduceMean2dEndtoEndTestFloat16")
+{
+    ReduceEndToEnd2d<DataType::Float16>(tosaDefaultBackends, ReduceOperation::Mean);
+}
+
+TEST_CASE("TosaRefReduceMean2dEndtoEndTestFloat16WithKeepDims")
+{
+    ReduceEndToEnd2d<DataType::Float16>(tosaDefaultBackends, ReduceOperation::Mean, true);
+}
+
+TEST_CASE("TosaRefReduceMean2dEndtoEndTestFloat32")
+{
+    ReduceEndToEnd2d<DataType::Float32>(tosaDefaultBackends, ReduceOperation::Mean);
+}
+
+TEST_CASE("TosaRefReduceMean2dEndtoEndTestFloat32WithKeepDims")
+{
+    ReduceEndToEnd2d<DataType::Float32>(tosaDefaultBackends, ReduceOperation::Mean, true);
+}
+
+TEST_CASE("TosaRefReduceMean2dEndtoEndTestInt8")
+{
+    ReduceEndToEnd2d<DataType::QAsymmS8>(tosaDefaultBackends, ReduceOperation::Mean);
+}
+
+TEST_CASE("TosaRefReduceMean2dEndtoEndTestInt8WithKeepDims")
+{
+    ReduceEndToEnd2d<DataType::QAsymmS8>(tosaDefaultBackends, ReduceOperation::Mean, true);
+}
+
+TEST_CASE("TosaRefReduceMean3dEndtoEndTestFloat16")
+{
+    ReduceEndToEnd3d<DataType::Float16>(tosaDefaultBackends, ReduceOperation::Mean);
+}
+
+TEST_CASE("TosaRefReduceMean3dEndtoEndTestFloat16WithKeepDims")
+{
+    ReduceEndToEnd3d<DataType::Float16>(tosaDefaultBackends, ReduceOperation::Mean, true);
+}
+
+TEST_CASE("TosaRefReduceMean3dEndtoEndTestFloat32")
+{
+    ReduceEndToEnd3d<DataType::Float32>(tosaDefaultBackends, ReduceOperation::Mean);
+}
+
+TEST_CASE("TosaRefReduceMean3dEndtoEndTestFloat32WithKeepDims")
+{
+    ReduceEndToEnd3d<DataType::Float32>(tosaDefaultBackends, ReduceOperation::Mean, true);
+}
+
+TEST_CASE("TosaRefReduceMean3dEndtoEndTestInt8")
+{
+    ReduceEndToEnd3d<DataType::QAsymmS8>(tosaDefaultBackends, ReduceOperation::Mean);
+}
+
+TEST_CASE("TosaRefReduceMean3dEndtoEndTestInt8WithKeepDims")
+{
+    ReduceEndToEnd3d<DataType::QAsymmS8>(tosaDefaultBackends, ReduceOperation::Mean, true);
+}
+
+TEST_CASE("TosaRefReduceMean4dEndtoEndTestFloat16")
+{
+    ReduceEndToEnd4d<DataType::Float16>(tosaDefaultBackends, ReduceOperation::Mean);
+}
+
+TEST_CASE("TosaRefReduceMean4dEndtoEndTestFloat16WithKeepDims")
+{
+    ReduceEndToEnd4d<DataType::Float16>(tosaDefaultBackends, ReduceOperation::Mean, true);
+}
+
+TEST_CASE("TosaRefReduceMean4dEndtoEndTestFloat32")
+{
+    ReduceEndToEnd4d<DataType::Float32>(tosaDefaultBackends, ReduceOperation::Mean);
+}
+
+TEST_CASE("TosaRefReduceMean4dEndtoEndTestFloat32WithKeepDims")
+{
+    ReduceEndToEnd4d<DataType::Float32>(tosaDefaultBackends, ReduceOperation::Mean, true);
+}
+
+TEST_CASE("TosaRefReduceMean4dEndtoEndTestInt8")
+{
+    ReduceEndToEnd4d<DataType::QAsymmS8>(tosaDefaultBackends, ReduceOperation::Mean);
+}
+
+TEST_CASE("TosaRefReduceMean4dEndtoEndTestInt8WithKeepDims")
+{
+    ReduceEndToEnd4d<DataType::QAsymmS8>(tosaDefaultBackends, ReduceOperation::Mean, true);
+}
+
+// Reshape
+TEST_CASE("TosaRefReshapeEndtoEndTestFloat32")
+{
+    ReshapeEndToEnd<DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefReshapeEndtoEndTestInt32")
+{
+    ReshapeEndToEnd<DataType::Signed32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefReshapeEndtoEndTestFloat16")
+{
+    ReshapeEndToEndFloat16<DataType::Float16>(tosaDefaultBackends);
+}
+
+// Rsqrt
+TEST_CASE("TosaRefRsqrtEndtoEndTestFloat32")
+{
+    ElementwiseUnarySimpleEndToEnd<DataType::Float32>(tosaDefaultBackends,
+                                                      UnaryOperation::Rsqrt);
+}
+
+TEST_CASE("TosaRefRsqrtEndtoEndTestFloat16")
+{
+    ElementwiseUnarySimpleEndToEnd<DataType::Float16>(tosaDefaultBackends,
+                                                      UnaryOperation::Rsqrt);
+}
+
+TEST_CASE("TosaRefRsqrtEndToEndTestInt8")
+{
+    ElementwiseUnarySimpleEndToEnd<DataType::QSymmS8>(tosaDefaultBackends,
+                                                      UnaryOperation::Rsqrt);
+}
+
+TEST_CASE("TosaRefRsqrtEndToEndTestQAsymmS8")
+{
+    ElementwiseUnarySimpleEndToEnd<DataType::QAsymmS8>(tosaDefaultBackends,
+                                                       UnaryOperation::Rsqrt);
+}
+
+// Exp
+TEST_CASE("TosaRefExpEndToEndTestFloat32")
+{
+    ElementwiseUnarySimpleEndToEnd<armnn::DataType::Float32>(tosaDefaultBackends,
+                                                             UnaryOperation::Exp);
+}
+
+TEST_CASE("TosaRefExpEndToEndTestInt8")
+{
+    ElementwiseUnarySimpleEndToEnd<armnn::DataType::QAsymmS8>(tosaDefaultBackends,
+                                                              UnaryOperation::Exp);
+}
+
+// Log
+TEST_CASE("TosaRefLogEndToEndTestFloat32")
+{
+    ElementwiseUnarySimpleEndToEnd<armnn::DataType::Float32>(tosaDefaultBackends,
+                                                             UnaryOperation::Log);
+}
+
+TEST_CASE("TosaRefLogEndToEndTestSint8")
+{
+    ElementwiseUnarySimpleEndToEnd<armnn::DataType::QAsymmS8>(tosaDefaultBackends,
+                                                              UnaryOperation::Log);
+}
+
+// Resize
+TEST_CASE("TosaRefResizeNearestNeighborEndToEndFloat32AlignCornersNhwcTest")
+{
+    ResizeNearestNeighborEndToEnd<armnn::DataType::Float32>(tosaDefaultBackends, armnn::
+                                                            DataLayout::NHWC,
+                                                            true,
+                                                            false);
+}
+
+TEST_CASE("TosaRefResizeNearestNeighborEndToEndFloat32HalfPixelNhwcTest")
+{
+    ResizeNearestNeighborEndToEnd<armnn::DataType::Float32>(tosaDefaultBackends, armnn::
+                                                            DataLayout::NHWC,
+                                                            false,
+                                                            true);
+}
+
+TEST_CASE("TosaRefResizeNearestNeighborEndToEndFloat16AlignCornersNhwcTest")
+{
+    ResizeNearestNeighborEndToEnd<armnn::DataType::Float16>(tosaDefaultBackends, armnn::
+                                                            DataLayout::NHWC,
+                                                            true,
+                                                            false);
+}
+
+TEST_CASE("TosaRefResizeNearestNeighborEndToEndFloat16HalfPixelNhwcTest")
+{
+    ResizeNearestNeighborEndToEnd<armnn::DataType::Float16>(tosaDefaultBackends, armnn::
+                                                            DataLayout::NHWC,
+                                                            false,
+                                                            true);
+}
+
+TEST_CASE("TosaRefResizeNearestNeighborEndToEndInt8AlignCornersNhwcTest")
+{
+    ResizeNearestNeighborEndToEnd<armnn::DataType::QSymmS8>(tosaDefaultBackends, armnn::
+                                                            DataLayout::NHWC,
+                                                            true,
+                                                            false);
+}
+
+TEST_CASE("TosaRefResizeNearestNeighborEndToEndInt8HalfPixelNhwcTest")
+{
+    ResizeNearestNeighborEndToEnd<armnn::DataType::QSymmS8>(tosaDefaultBackends, armnn::
+                                                            DataLayout::NHWC,
+                                                            false,
+                                                            true);
+}
+
+TEST_CASE("TosaRefResizeNearestNeighborEndToEndInt16AlignCornersNhwcTest")
+{
+    ResizeNearestNeighborEndToEnd<armnn::DataType::QSymmS16>(tosaDefaultBackends, armnn::
+                                                             DataLayout::NHWC,
+                                                             true,
+                                                             false);
+}
+
+TEST_CASE("TosaRefResizeNearestNeighborEndToEndInt16HalfPixelNhwcTest")
+{
+    ResizeNearestNeighborEndToEnd<armnn::DataType::QSymmS16>(tosaDefaultBackends, armnn::
+                                                             DataLayout::NHWC,
+                                                             false,
+                                                             true);
+}
+
+TEST_CASE("TosaRefResizeBilinearEndToEndInt8")
+{
+    ResizeBilinearEndToEnd<armnn::DataType::QSymmS8>(tosaDefaultBackends, armnn::DataLayout::NHWC);
+}
+
+TEST_CASE("TosaRefResizeBilinearEndToEndFloat16")
+{
+    ResizeBilinearEndToEnd<armnn::DataType::Float16>(tosaDefaultBackends, armnn::DataLayout::NHWC, 0.01f);
+}
+
+TEST_CASE("TosaRefResizeBilinearEndToEndFloat32")
+{
+    ResizeBilinearEndToEnd<armnn::DataType::Float32>(tosaDefaultBackends, armnn::DataLayout::NHWC);
+}
+
+// Slice
+TEST_CASE("TosaRefSliceEndtoEndTestFloat32")
+{
+    SliceEndToEnd<DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSliceEndtoEndTestInt32")
+{
+    SliceEndToEnd<DataType::Signed32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSliceEndtoEndTestFloat16")
+{
+    SliceEndToEndFloat16<DataType::Float16>(tosaDefaultBackends);
+}
+
+// Softmax
+TEST_CASE("TosaRef3DSoftmaxQuantizedInt8")
+{
+    QSoftmax3DEndToEnd<DataType::QSymmS8>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRef1DSoftmaxQuantizedInt8")
+{
+    QSoftmax1DEndToEnd<DataType::QSymmS8>(tosaDefaultBackends);
+}
+
+// StridedSlice
+TEST_CASE("TosaRefStridedSliceInvalidSliceEndToEndTest")
+{
+    StridedSliceInvalidSliceEndToEndTest(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStridedSlice4DEndToEndTest")
+{
+    StridedSlice4DEndToEndTest<armnn::DataType::QAsymmS8>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStridedSlice3DMaskedEndToEndTest")
+{
+    StridedSlice3DMaskedEndToEndTest<armnn::DataType::QAsymmS8>(tosaDefaultBackends);
+}
+
+// Split
+TEST_CASE("TosaRefSplit1dEndtoEndTestBoolean")
+{
+    Splitter1dEndToEnd<DataType::Boolean>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSplit1dEndtoEndTestInt8")
+{
+    Splitter1dEndToEnd<DataType::QSymmS8>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSplit1dEndtoEndTestSigned16")
+{
+    Splitter1dEndToEnd<DataType::QSymmS16>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSplit1dEndtoEndTestInt32")
+{
+    Splitter1dEndToEnd<DataType::Signed32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSplit1dEndtoEndTestFloat16")
+{
+    Splitter1dEndToEndFloat16<DataType::Float16>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSplit1dEndToEndFloat32")
+{
+    Splitter1dEndToEnd<DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSplit2dDim0EndtoEndTestFloat32")
+{
+    Splitter2dDim0EndToEnd<DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSplit2dDim1EndtoEndTestFloat32")
+{
+    Splitter2dDim1EndToEnd<DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSplit3dDim0EndtoEndTestFloat32")
+{
+    Splitter3dDim0EndToEnd<DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSplit3dDim1EndtoEndTestFloat32")
+{
+    Splitter3dDim1EndToEnd<DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSplit3dDim1EndtoEndTestFloat16")
+{
+    Splitter3dDim1EndToEndFloat16<DataType::Float16>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSplit3dDim1EndtoEndTestBoolean")
+{
+    Splitter3dDim1EndToEnd<DataType::Boolean>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSplit3dDim1EndtoEndTestInt8")
+{
+    Splitter3dDim1EndToEnd<DataType::QSymmS8>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSplit3dDim1EndtoEndTestSigned16")
+{
+    Splitter3dDim1EndToEnd<DataType::QSymmS16>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSplit3dDim1EndtoEndTestInt32")
+{
+    Splitter3dDim1EndToEnd<DataType::Signed32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSplit3dDim2EndtoEndTestInt8")
+{
+    Splitter3dDim2EndToEnd<DataType::QAsymmS8>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSplit4dDim0EndtoEndTestInt8")
+{
+    Splitter4dDim0EndToEnd<DataType::QSymmS8>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSplit4dDim1EndtoEndTestInt8")
+{
+    Splitter4dDim1EndToEnd<DataType::QSymmS8>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSplit4dDim2EndtoEndTestBoolean")
+{
+    Splitter4dDim2EndToEnd<DataType::Boolean>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSplit4dDim2EndtoEndTestInt8")
+{
+    Splitter4dDim2EndToEnd<DataType::QSymmS8>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSplit4dDim2EndtoEndTestInt16")
+{
+    Splitter4dDim2EndToEnd<DataType::QSymmS16>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSplit4dDim2EndtoEndTestInt32")
+{
+    Splitter4dDim2EndToEnd<DataType::Signed32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSplit4dDim2EndtoEndTestFloat16")
+{
+    Splitter4dDim2EndToEndFloat16<DataType::Float16>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSplit4dDim3EndtoEndTestInt8")
+{
+    Splitter4dDim3EndToEnd<DataType::QSymmS8>(tosaDefaultBackends);
+}
+
+// Stack - Rank1, Axis0
+TEST_CASE("TosaRefStackRank1Axis0EndToEndFloat32")
+{
+    StackRank1Axis0EndToEndTest<armnn::DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank1Axis0EndToEndInt32")
+{
+    StackRank1Axis0EndToEndTest<armnn::DataType::Signed32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank1Axis0EndToEndQSymmS16")
+{
+    StackRank1Axis0EndToEndTest<armnn::DataType::QSymmS16>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank1Axis0EndToEndQAsymmS8")
+{
+    StackRank1Axis0EndToEndTest<armnn::DataType::QAsymmS8>(tosaDefaultBackends);
+}
+
+// Stack - Rank1, Axis1
+TEST_CASE("TosaRefStackRank1Axis1EndToEndFloat32")
+{
+    StackRank1Axis1EndToEndTest<armnn::DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank1Axis1EndToEndInt32")
+{
+    StackRank1Axis1EndToEndTest<armnn::DataType::Signed32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank1Axis1EndToEndQSymmS16")
+{
+    StackRank1Axis1EndToEndTest<armnn::DataType::QSymmS16>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank1Axis1EndToEndQAsymmS8")
+{
+    StackRank1Axis1EndToEndTest<armnn::DataType::QAsymmS8>(tosaDefaultBackends);
+}
+
+// Stack - Rank2, Axis0
+TEST_CASE("TosaRefStackRank2Axis0EndToEndFloat32")
+{
+    StackRank2Axis0EndToEndTest<armnn::DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank2Axis0EndToEndInt32")
+{
+    StackRank2Axis0EndToEndTest<armnn::DataType::Signed32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank2Axis0EndToEndQSymmS16")
+{
+    StackRank2Axis0EndToEndTest<armnn::DataType::QSymmS16>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank2Axis0EndToEndQAsymmS8")
+{
+    StackRank2Axis0EndToEndTest<armnn::DataType::QAsymmS8>(tosaDefaultBackends);
+}
+
+// Stack - Rank2, Axis1
+TEST_CASE("TosaRefStackRank2Axis1EndToEndFloat32")
+{
+    StackRank2Axis1EndToEndTest<armnn::DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank2Axis1EndToEndInt32")
+{
+    StackRank2Axis1EndToEndTest<armnn::DataType::Signed32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank2Axis1EndToEndQSymmS16")
+{
+    StackRank2Axis1EndToEndTest<armnn::DataType::QSymmS16>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank2Axis1EndToEndQAsymmS8")
+{
+    StackRank2Axis1EndToEndTest<armnn::DataType::QAsymmS8>(tosaDefaultBackends);
+}
+
+// Stack - Rank2, Axis2
+TEST_CASE("TosaRefStackRank2Axis2EndToEndFloat32")
+{
+    StackRank2Axis2EndToEndTest<armnn::DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank2Axis2EndToEndInt32")
+{
+    StackRank2Axis2EndToEndTest<armnn::DataType::Signed32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank2Axis2EndToEndQSymmS16")
+{
+    StackRank2Axis2EndToEndTest<armnn::DataType::QSymmS16>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank2Axis2EndToEndQAsymmS8")
+{
+    StackRank2Axis2EndToEndTest<armnn::DataType::QAsymmS8>(tosaDefaultBackends);
+}
+
+// Stack - Rank3, Axis0
+TEST_CASE("TosaRefStackRank3Axis0EndToEndFloat32")
+{
+    StackRank3Axis0EndToEndTest<armnn::DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank3Axis0EndToEndInt32")
+{
+    StackRank3Axis0EndToEndTest<armnn::DataType::Signed32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank3Axis0EndToEndQSymmS16")
+{
+    StackRank3Axis0EndToEndTest<armnn::DataType::QSymmS16>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank3Axis0EndToEndQAsymmS8")
+{
+    StackRank3Axis0EndToEndTest<armnn::DataType::QAsymmS8>(tosaDefaultBackends);
+}
+
+// Stack - Rank3, Axis1
+TEST_CASE("TosaRefStackRank3Axis1EndToEndFloat32")
+{
+    StackRank3Axis1EndToEndTest<armnn::DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank3Axis1EndToEndInt32")
+{
+    StackRank3Axis1EndToEndTest<armnn::DataType::Signed32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank3Axis1EndToEndQSymmS16")
+{
+    StackRank3Axis1EndToEndTest<armnn::DataType::QSymmS16>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank3Axis1EndToEndQAsymmS8")
+{
+    StackRank3Axis1EndToEndTest<armnn::DataType::QAsymmS8>(tosaDefaultBackends);
+}
+
+// Stack - Rank3, Axis2
+TEST_CASE("TosaRefStackRank3Axis2EndToEndFloat32")
+{
+    StackRank3Axis2EndToEndTest<armnn::DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank3Axis2EndToEndInt32")
+{
+    StackRank3Axis2EndToEndTest<armnn::DataType::Signed32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank3Axis2EndToEndQSymmS16")
+{
+    StackRank3Axis2EndToEndTest<armnn::DataType::QSymmS16>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank3Axis2EndToEndQAsymmS8")
+{
+    StackRank3Axis2EndToEndTest<armnn::DataType::QAsymmS8>(tosaDefaultBackends);
+}
+
+// Stack - Rank3, Axis3
+TEST_CASE("TosaRefStackRank3Axis3EndToEndFloat32")
+{
+    StackRank3Axis3EndToEndTest<armnn::DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank3Axis3EndToEndInt32")
+{
+    StackRank3Axis3EndToEndTest<armnn::DataType::Signed32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank3Axis3EndToEndQSymmS16")
+{
+    StackRank3Axis3EndToEndTest<armnn::DataType::QSymmS16>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefStackRank3Axis3EndToEndQAsymmS8")
+{
+    StackRank3Axis3EndToEndTest<armnn::DataType::QAsymmS8>(tosaDefaultBackends);
+}
+
+// Subtraction
+TEST_CASE("TosaRefSubtractionEndtoEndTestFloat32")
+{
+    SubtractionEndToEnd<DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSubtractionEndtoEndTestInt32")
+{
+    SubtractionEndToEnd<DataType::Signed32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefSubtractionEndtoEndTestFloat16")
+{
+    SubtractionEndToEndFloat16<DataType::Float16>(tosaDefaultBackends);
+}
+
+// SqDiff
+TEST_CASE("TosaRefSquaredDifferenceEndToEndTestFloat32")
+{
+    ElementwiseBinarySimpleEndToEnd<armnn::DataType::Float32>(tosaDefaultBackends, BinaryOperation::SqDiff);
+}
+
+TEST_CASE("TosaRefSquaredDifferenceEndToEndTestInt8")
+{
+    ElementwiseBinarySimpleEndToEnd<armnn::DataType::QSymmS8>(tosaDefaultBackends, BinaryOperation::SqDiff);
+}
+
+// Mul
+TEST_CASE("TosaRefMultiplicationEndtoEndTestFloat32")
+{
+    MultiplicationEndToEnd<DataType::Float32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefMultiplicationEndtoEndTestInt32")
+{
+    MultiplicationEndToEnd<DataType::Signed32>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefMultiplicationEndtoEndTestFloat16")
+{
+    MultiplicationEndToEndFloat16<DataType::Float16>(tosaDefaultBackends);
+}
+
+TEST_CASE("TosaRefMulDifferentScalesEndToEndTestInt8")
+{
+    ElementwiseBinarySimpleWithScalesEndToEnd<armnn::DataType::QSymmS8>(tosaDefaultBackends, BinaryOperation::Mul);
+}
+
+// TransposeConvolution2d
+TEST_CASE("TosaRefTransposeConvolution2dEndToEndFloatNhwcTest")
+{
+    TransposeConvolution2dEndToEnd<armnn::DataType::Float32, armnn::DataType::Float32>(
+        tosaDefaultBackends, armnn::DataLayout::NHWC);
+}
+
+TEST_CASE("TosaRefSimpleTransposeConvolution2dEndToEndFloatNhwcTest")
+{
+    SimpleTransposeConvolution2dEndToEnd<armnn::DataType::Float32, armnn::DataType::Float32>(
+        tosaDefaultBackends, armnn::DataLayout::NHWC);
+}
+
+// Transpose
+TEST_CASE("TosaRefTransposeEndtoEndTestFloat32")
+{
+    TransposeEndToEnd<armnn::DataType::Float32>(tosaDefaultBackends);
+}
+
+
+TEST_CASE("TosaRefSpaceToBatchNDOperatorInputVariations")
+{
+    // based off of model that was used to test for prototyping
+    SUBCASE("Baseline")
+    {
+        SpaceToBatchNdEndToEnd<armnn::DataType::QAsymmS8>({1, 32, 32, 3},
+                                                          {2, 2},
+                                                          {{0, 0}, {0, 0}},
+                                                          tosaDefaultBackends);
+    }
+    // input size isn't divisible by the block size so padding is required
+    SUBCASE("WithPadding")
+    {
+        SpaceToBatchNdEndToEnd<armnn::DataType::QAsymmS8>({1, 31, 31, 1},
+                                                          {2, 2},
+                                                          {{1, 0}, {1, 0}},
+                                                          tosaDefaultBackends);
+    }
+    // test where batch size is greater than 1
+    SUBCASE("BatchSize2")
+    {
+        SpaceToBatchNdEndToEnd<armnn::DataType::QAsymmS8>({2, 16, 16, 2},
+                                                          {2, 2},
+                                                          {{0, 0}, {0, 0}},
+                                                          tosaDefaultBackends);
+    }
+    // test with non symmetric padding
+    SUBCASE("NonSymmetricPadding")
+    {
+        SpaceToBatchNdEndToEnd<armnn::DataType::QAsymmS8>({1, 30, 28, 1},
+                                                          {2, 2},
+                                                          {{2, 2}, {1, 3}},
+                                                          tosaDefaultBackends);
+    }
+    // Non square block shape i.e. 2x4
+    SUBCASE("RectangularBlock")
+    {
+        SpaceToBatchNdEndToEnd<armnn::DataType::QAsymmS8>({1, 20, 20, 1},
+                                                          {2, 4},
+                                                          {{0, 0}, {0, 0}},
+                                                          tosaDefaultBackends);
+    }
+    // high number of channels i.e. 64
+    SUBCASE("ManyChannels")
+    {
+        SpaceToBatchNdEndToEnd<armnn::DataType::QAsymmS8>({1, 8, 8, 64},
+                                                          {2, 2},
+                                                          {{0, 0}, {0, 0}},
+                                                          tosaDefaultBackends);
+    }
+    // input requires padding to match up with block shape
+    SUBCASE("PaddingRequiredToMatchBlock")
+    {
+        SpaceToBatchNdEndToEnd<armnn::DataType::QAsymmS8>({1, 3, 3, 1},
+                                                          {2, 2},
+                                                          {{1, 0}, {1, 0}},
+                                                          tosaDefaultBackends);
+    }
+    // Smallest input for a block without needing padding
+    SUBCASE("SmallestInputForBlockShape")
+    {
+        SpaceToBatchNdEndToEnd<armnn::DataType::QAsymmS8>({1, 2, 2, 1},
+                                                          {2, 2},
+                                                          {{0, 0}, {0, 0}},
+                                                          tosaDefaultBackends);
+    }
+    // Odd input size and padding to make it divisible by block
+    SUBCASE("OddSpatialDimsWithPadding")
+    {
+        SpaceToBatchNdEndToEnd<armnn::DataType::QAsymmS8>({1, 5, 7, 1},
+                                                          {2, 2},
+                                                          {{1, 0}, {1, 0}},
+                                                          tosaDefaultBackends);
+    }
+    // batch size more than 1 with non symmetrical padding and large block shape
+    SUBCASE("Batch2WithPadding")
+    {
+        SpaceToBatchNdEndToEnd<armnn::DataType::QAsymmS8>({2, 15, 15, 1},
+                                                          {3, 3},
+                                                          {{1, 2}, {0, 3}},
+                                                          tosaDefaultBackends);
+    }
+    // spatial dimensions are smaller than the initial batch dimension
+    SUBCASE("HighBatchLowSpatial")
+    {
+        SpaceToBatchNdEndToEnd<armnn::DataType::QAsymmS8>({4, 4, 4, 1},
+                                                          {2, 2},
+                                                          {{0, 0}, {0, 0}},
+                                                          tosaDefaultBackends);
+    }
+    // padding applied to only one dimension
+    SUBCASE("SingleDimPadding")
+    {
+        SpaceToBatchNdEndToEnd<armnn::DataType::QAsymmS8>({1, 6, 6, 1},
+                                                          {3, 3},
+                                                          {{0, 0}, {1, 2}},
+                                                          tosaDefaultBackends);
+    }
+    // Mimics RGB input as a test
+    SUBCASE("Channels3")
+    {
+        SpaceToBatchNdEndToEnd<armnn::DataType::QAsymmS8>({1, 6, 6, 3},
+                                                          {2, 2},
+                                                          {{0, 0}, {0, 0}},
+                                                          tosaDefaultBackends);
+    }
+    // Mimics RGBA input as a test
+    SUBCASE("Channels4")
+    {
+        SpaceToBatchNdEndToEnd<armnn::DataType::QAsymmS8>({1, 6, 6, 4},
+                                                          {2, 2},
+                                                          {{0, 0}, {0, 0}},
+                                                          tosaDefaultBackends);
+    }
+    // Large batch count test
+    SUBCASE("HighBatchCount")
+    {
+        SpaceToBatchNdEndToEnd<armnn::DataType::QAsymmS8>({8, 16, 16, 1},
+                                                          {2, 2},
+                                                          {{0, 0}, {0, 0}},
+                                                          tosaDefaultBackends);
+    }
+    // Edge case where spatial dimension is 1
+    SUBCASE("OneDimHeight")
+    {
+        SpaceToBatchNdEndToEnd<armnn::DataType::QAsymmS8>({1, 1, 32, 1},
+                                                          {1, 2},
+                                                          {{0, 0}, {0, 0}},
+                                                          tosaDefaultBackends);
+    }
+    // padding applied on one side of spatial dimension only
+    SUBCASE("PaddingOnlyOnOneSide")
+    {
+        SpaceToBatchNdEndToEnd<armnn::DataType::QAsymmS8>({1, 30, 30, 1},
+                                                          {2, 2},
+                                                          {{2, 0}, {0, 0}},
+                                                          tosaDefaultBackends);
+    }
+    // padding applied on height only
+    SUBCASE("PaddingOnlyHeight")
+    {
+        SpaceToBatchNdEndToEnd<armnn::DataType::QAsymmS8>({1, 31, 32, 1},
+                                                          {2, 2},
+                                                          {{1, 0}, {0, 0}},
+                                                          tosaDefaultBackends);
+    }
+    // edge case where the block shape is [1,1], leading to no change in spatial dim
+    SUBCASE("BlockShapeOne")
+    {
+        SpaceToBatchNdEndToEnd<armnn::DataType::QAsymmS8>({1, 16, 16, 1},
+                                                          {1, 1},
+                                                          {{0, 0}, {0, 0}},
+                                                          tosaDefaultBackends);
+    }
+    // Symmetric Padding with a high value (relative to the input size) 
+    SUBCASE("ExtremePadding")
+    {
+        SpaceToBatchNdEndToEnd<armnn::DataType::QAsymmS8>({1, 4, 4, 1},
+                                                          {2, 2},
+                                                          {{4, 4}, {4, 4}},
+                                                          tosaDefaultBackends);
+    }
+
+}
+TEST_CASE("TosaRefBatchToSpaceNDOperatorInputVariations")
+{
+    SUBCASE("MinimalBatchToSpaceNoCrop")
+    {
+        BatchToSpaceNdEndToEnd<armnn::DataType::Float32>(
+            {4, 1, 1, 1},         // NHWC
+            {2, 2},               // block shape
+            {{0, 0}, {0, 0}},     // no crop
+            tosaDefaultBackends
+        );
+    }
+
+    SUBCASE("Batch8_TwoByTwoBlock")
+    {
+        BatchToSpaceNdEndToEnd<armnn::DataType::QAsymmS8>(
+            {8, 1, 1, 1},
+            {2, 2},
+            {{0, 0}, {0, 0}},
+            tosaDefaultBackends
+        );
+    }
+
+    SUBCASE("Batch8_TwoByTwoBlock_LargerSpatial")
+    {
+        BatchToSpaceNdEndToEnd<armnn::DataType::QAsymmS8>(
+            {8, 2, 1, 1},
+            {2, 2},
+            {{0, 0}, {0, 0}},
+            tosaDefaultBackends
+        );
+    }
+
+    SUBCASE("NonZeroCrop_TopLeft")
+    {
+        BatchToSpaceNdEndToEnd<armnn::DataType::Float32>(
+            {4, 2, 2, 1},
+            {2, 1},
+            {{1, 0}, {1, 0}}, // crops remove top row and left column
+            tosaDefaultBackends
+        );
+    }
+
+    SUBCASE("NonZeroCrop_BottomRight")
+    {
+        BatchToSpaceNdEndToEnd<armnn::DataType::Float32>(
+            {4, 2, 2, 1},
+            {2, 1},
+            {{0, 1}, {0, 1}}, // crops remove bottom row and right column
+            tosaDefaultBackends
+        );
+    }
+
+    SUBCASE("NonSquareBlockShape")
+    {
+        BatchToSpaceNdEndToEnd<armnn::DataType::QAsymmS8>(
+            {6, 2, 1, 1},
+            {3, 2},
+            {{0, 0}, {0, 0}}, // block shape 3x2
+            tosaDefaultBackends
+        );
+    }
+
+    SUBCASE("MultiChannelData")
+    {
+        BatchToSpaceNdEndToEnd<armnn::DataType::Float32>(
+            {4, 2, 1, 3},
+            {2, 1},
+            {{0, 0}, {0, 0}}, // test with 3 channels
+            tosaDefaultBackends
+        );
+    }
+
+    SUBCASE("WideSpatialInput")
+    {
+        BatchToSpaceNdEndToEnd<armnn::DataType::QAsymmS8>(
+            {4, 4, 4, 1},
+            {2, 2},
+            {{0, 0}, {0, 0}},
+            tosaDefaultBackends
+        );
+    }
+
+    SUBCASE("CropShrinksOutput")
+    {
+        BatchToSpaceNdEndToEnd<armnn::DataType::QAsymmS8>(
+            {4, 3, 3, 1},
+            {2, 2},
+            {{1, 1}, {1, 1}}, // crops 2 rows and 2 cols total
+            tosaDefaultBackends
+        );
+    }
+
+    SUBCASE("LargerBatch16")
+    {
+        BatchToSpaceNdEndToEnd<armnn::DataType::Float32>(
+            {16, 1, 1, 1},
+            {4, 1},
+            {{0, 0}, {0, 0}}, // higher batch count
+            tosaDefaultBackends
+        );
+    }
+        SUBCASE("NoOp_Identity")
+    {
+        BatchToSpaceNdEndToEnd<armnn::DataType::Float32>(
+            {1, 4, 4, 1},
+            {1, 1},
+            {{0, 0}, {0, 0}},
+            tosaDefaultBackends
+        );
+    }
+
+    SUBCASE("OneByThreeBlock")
+    {
+        BatchToSpaceNdEndToEnd<armnn::DataType::Float32>(
+            {3, 2, 2, 1},
+            {1, 3},
+            {{0, 0}, {0, 0}},
+            tosaDefaultBackends
+        );
+    }
+
+    SUBCASE("LargerSpatialWithCrop")
+    {
+        BatchToSpaceNdEndToEnd<armnn::DataType::Float32>(
+            {4, 4, 4, 1},
+            {2, 2},
+            {{1, 0}, {0, 1}},
+            tosaDefaultBackends
+        );
+    }
+}
+}

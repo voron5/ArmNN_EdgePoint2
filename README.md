@@ -7,7 +7,6 @@
 Создание виртуального окружения:
 
 
-
 ```
 python -m venv env
 
@@ -15,67 +14,60 @@ source env/bin/activate
 ```
 
 
-
 Установка необходимых зависимостей:
 
 
-
 ```
-pip install tflite-runtime \\
-numpy \\
-matplotlib \\
-opencv-python \\
-torch \\
-torchvision \\
-onnx \\
-onnxruntime \\
-tensorflow \\
+pip install tflite-runtime \
+numpy \
+matplotlib \
+opencv-python \
+torch \
+torchvision \
+onnx \
+onnxruntime \
+tensorflow \
 flatbuffers
 ```
-
 
 
 Необходимо собрать образ докер ArmNN:
 
 
-
 ```
 cd armnn/build-tool
 
-docker build \\
---build-arg SETUP\_ARGS="--target-arch=aarch64 --tflite-classic-delegate" \\
---build-arg BUILD\_ARGS="--target-arch=aarch64 --tflite-classic-delegate --neon-backend --cl-backend" \\
---tag armnn:aarch64 \\
+docker build \
+--build-arg SETUP_ARGS="--target-arch=aarch64 --tflite-classic-delegate" \
+--build-arg BUILD_ARGS="--target-arch=aarch64 --tflite-classic-delegate --neon-backend --cl-backend" \
+--tag armnn:aarch64 \
 --file docker/Dockerfile .
 ```
-
 
 
 Далее необходимо копировать сборку на хост:
 
 
-
 ```
-./scripts/docker-copy-to-host.sh armnn:aarch64 armnn\_aarch64\_build.tar.gz
+./scripts/docker-copy-to-host.sh armnn:aarch64 armnn_aarch64_build.tar.gz
 
-cd docker\_output
-# Extract the tarball into a directory called <target\\\_arch>\\\_build
-# If --debug is enabled, the extracted build directory will be called <target\\\_arch>\\\_build\\\_debug tar -xzf armnn\\\_aarch64\\\_build.tar.gz
+cd docker_output
+# Extract the tarball into a directory called _build
+# If --debug is enabled, the extracted build directory will be called _build_debug tar -xzf armnn_aarch64_build.tar.gz
 
-cd aarch64\\\_build
-# Set LD\\\_LIBRARY\\\_PATH to the current aarch64\\\_build directory (.)
-export LD\\\_LIBRARY\\\_PATH=.; ./UnitTests
+cd aarch64_build
+# Set LD_LIBRARY_PATH to the current aarch64_build directory (.)
+export LD_LIBRARY_PATH=.; ./UnitTests
 
 # If the Arm NN TF Lite Delegate is built, we can also run DelegateUnitTests
 cd delegate
 
-# Set LD\\\_LIBRARY\\\_PATH to the current delegate directory (.) and the aarch64\\\_build directory (..)
-export LD\\\_LIBRARY\\\_PATH=.:..; ./DelegateUnitTests
+# Set LD_LIBRARY_PATH to the current delegate directory (.) and the aarch64_build directory (..)
+export LD_LIBRARY_PATH=.:..; ./DelegateUnitTests
 ```
 
 
-
-Готово, ArmNN собран. Подробнее этот шаг описан ниже.
+Готово, ArmNN собран. Подробнее этот шаг описан ниже. 
 
 
 
@@ -85,79 +77,68 @@ export LD\\\_LIBRARY\\\_PATH=.:..; ./DelegateUnitTests
 
 
 
-SETUP\_ARGS ( НАСТРОЙКИ )
+SETUP_ARGS ( НАСТРОЙКИ )
 
 Эти аргументы в конечном итоге передаются в setup-armnn.sh который загружает и собирает зависимости Arm NN. Для удобства использования (но при более длительной первоначальной сборке Docker) используйте --all чтобы все зависимости Arm NN были доступны для использования при сборке Arm NN. При повторной сборке Docker с использованием того же SETUP\_ARGS процесс настройки будет пропущен (с использованием кэширования предыдущих этапов сборки Docker). Строка SETUP\_ARGS должна начинаться и заканчиваться двойными кавычками ".
 
 
 
 
-
-|SETUP\_ARGS|Description|
-|-|-|
-|--tflite-classic-delegate|flag: setup dependencies for the existing Arm NN TF Lite Delegate|
-|--tflite-opaque-delegate	<br />|flag: setup dependencies for the new Arm NN Opaque Delegate|
-|--tflite-parser|flag: setup dependencies for the Arm NN TF Lite Parser|
-|--onnx-parser|flag: setup dependencies for the Arm NN ONNX parser|
-|--all|flag: setup dependencies for all Arm NN components listed above|
-|--target-arch=|mandatory option: specify a target architecture aarch64, x86\_64, android64|
-
-
-
+SETUP_ARGS | Description
+|--|--|
+--tflite-classic-delegate | flag: setup dependencies for the existing Arm NN TF Lite Delegate|
+--tflite-opaque-delegate | flag: setup dependencies for the new Arm NN Opaque Delegate|
+--tflite-parser | flag: setup dependencies for the Arm NN TF Lite Parser|
+--onnx-parser | flag: setup dependencies for the Arm NN ONNX parser|
+--all | flag: setup dependencies for all Arm NN components listed above|
+--target-arch= | mandatory option: specify a target architecture aarch64, x86\_64, android64
 
 
 Необходимо предоставить хотя бы один компонент (например, --tflite-classic-delegate) или иначе предоставьте --all для настройки зависимостей для всех компонентов.
 
 
-
 Настройка для aarch64 со всеми зависимостями Arm NN:
 
 ```
-SETUP\\\_ARGS="--target-arch=aarch64 --all"
+SETUP_ARGS="--target-arch=aarch64 --all"
 ```
-
 
 
 Настройка для aarch64 с использованием только существующих зависимостей TF Lite Delegate и TF Lite Parser:
-
 ```
-SETUP\\\_ARGS="--target-arch=aarch64 --tflite-classic-delegate --tflite-parser"
+SETUP_ARGS="--target-arch=aarch64 --tflite-classic-delegate --tflite-parser"
 ```
 
 
 
 
+BUILD_ARGS
 
-BUILD\_ARGS
-
-Следующие аргументы передаются в build-armnn.sh и определяют, какие компоненты Arm NN следует включить в сборку. Строка BUILD\_ARGS должна начинаться и заканчиваться двойными кавычками ".
-
-
-
-|BUILD\_ARGS|Description|
-|-|-|
-|--tflite-classic-delegate|flag: build the existing Arm NN TF Lite Delegate component|
-|	<br />--tflite-opaque-delegate|flag: build the new Arm NN Opaque Delegate|
-|--tflite-parser|flag: build the Arm NN TF Lite Parser component|
-|--onnx-parser|flag: build the Arm NN ONNX parser component|
-|--all|flag: build all Arm NN components listed above|
-|--target-arch=|mandatory option: specify a target architecture aarch64, x86\_64, android64|
-|--neon-backend|flag: build Arm NN with the NEON backend (CPU acceleration from ACL)|
-|--cl-backend|flag: build Arm NN with the OpenCL backend (GPU acceleration from ACL)|
-|--ref-backend|flag: build Arm NN with the reference backend. Should be used for verification purposes only. Does not provide any performance acceleration.|
-|--debug|flag: build Arm NN (and ACL) with debug turned on (optional: defaults to off)|
-|--clean|flag: remove previous Arm NN and ACL build prior to script execution (optional: defaults to off)|
-|--symlink-armnn|flag: instead of cloning, make a symbolic link from the armnn directory containing the build-tool to the source directory|
-|--armnn-cmake-args=|option: provide additional comma-separated CMake arguments string for building Arm NN (optional). String should start and end with single quotes '. Please refer to armnn/cmake/GlobalConfig.cmake|
-|--acl-scons-params=|option: provide additional comma-separated scons parameters string for building ACL (optional). String should start and end with single quotes '. ACL provide documentation for their build options|
+Следующие аргументы передаются в build-armnn.sh и определяют, какие компоненты Arm NN следует включить в сборку. Строка BUILD_ARGS должна начинаться и заканчиваться двойными кавычками ".
 
 
 
+BUILD_ARGS | Description
+|--|--|
+--tflite-classic-delegate | flag: build the existing Arm NN TF Lite Delegate component|
+--tflite-opaque-delegate | flag: build the new Arm NN Opaque Delegate|
+--tflite-parser | flag: build the Arm NN TF Lite Parser component|
+--onnx-parser | flag: build the Arm NN ONNX parser component|
+--all | flag: build all Arm NN components listed above|
+--target-arch= | mandatory option: specify a target architecture aarch64, x86\_64, android64|
+--neon-backend | flag: build Arm NN with the NEON backend (CPU acceleration from ACL)|
+--cl-backend | flag: build Arm NN with the OpenCL backend (GPU acceleration from ACL)|
+--ref-backend | flag: build Arm NN with the reference backend. Should be used for verification purposes only. Does not provide any performance acceleration.|
+--debug | flag: build Arm NN (and ACL) with debug turned on (optional: defaults to off)|
+--clean | flag: remove previous Arm NN and ACL build prior to script execution (optional: defaults to off)|
+--symlink-armnn | flag: instead of cloning, make a symbolic link from the armnn directory containing the build-tool to the source directory|
+--armnn-cmake-args= | option: provide additional comma-separated CMake arguments string for building Arm NN (optional). String should start and end with single quotes '. Please refer to armnn/cmake/GlobalConfig.cmake|
+--acl-scons-params= | option: provide additional comma-separated scons parameters string for building ACL 				(optional). String should start and end with single quotes '. ACL provide documentation for their build options
 
 
 Необходимо предоставить хотя бы один компонент (т. е. --tflite-classic-delegate, --tflite-opaque-delegate, --tflite-parser, --onnx-parser) или указать --all
 
-Компонент, указанный в BUILD\_ARGS, также должен быть указан в SETUP\_ARGS ранее, иначе сборка Arm NN завершится ошибкой.
+Компонент, указанный в BUILD_ARGS, также должен быть указан в SETUP_ARGS ранее, иначе сборка Arm NN завершится ошибкой.
 
 Необходимо выбрать хотя бы один бэкенд (то есть --neon-backend, --cl-backend, --ref-backend).
 
@@ -166,47 +147,37 @@ BUILD\_ARGS
 Примеры:
 
 Сборка для aarch64 со всеми компонентами Arm NN, с поддержкой NEON и OpenCL:
-
 ```
-BUILD\_ARGS="--target-arch=aarch64 --all --neon-backend --cl-backend"
+BUILD_ARGS="--target-arch=aarch64 --all --neon-backend --cl-backend"
 ```
-
 
 
 Сборка для aarch64 с использованием существующего делегата Arm NN TF Lite, с поддержкой OpenCL и дополнительными параметрами scons для ACL:
-
 ```
-BUILD\_ARGS="--target-arch=aarch64 --tflite-classic-delegate --cl-backend --acl-scons-params='compress\_kernels=1,benchmark\_examples=1'"
+BUILD_ARGS="--target-arch=aarch64 --tflite-classic-delegate --cl-backend --acl-scons-params='compress_kernels=1,benchmark_examples=1'"
 ```
-
 
 
 Настройка для aarch64 со всеми зависимостями Arm NN, включенным OpenCL и дополнительными аргументами cmake для Arm NN:
-
 ```
-BUILD\_ARGS="--target-arch=aarch64 --all --cl-backend --armnn-cmake-args='-DBUILD\_SAMPLE\_APP=1,-DBUILD\_UNIT\_TESTS=0'"
+BUILD_ARGS="--target-arch=aarch64 --all --cl-backend --armnn-cmake-args='-DBUILD_SAMPLE_APP=1,-DBUILD_UNIT_TESTS=0'"
 ```
 
 
-
-Пример действительной комбинации SETUP\_ARGS и BUILD\_ARGS:
-
+Пример действительной комбинации SETUP_ARGS и BUILD_ARGS:
 
 
 ```
-SETUP\_ARGS="--target-arch=aarch64 --all"
-BUILD\_ARGS="--target-arch=aarch64 --tflite-classic-delegate --neon-backend --cl-backend"
+SETUP_ARGS="--target-arch=aarch64 --all"
+BUILD_ARGS="--target-arch=aarch64 --tflite-classic-delegate --neon-backend --cl-backend"
 ```
-
-Пример некорректного сочетания SETUP\_ARGS и BUILD\_ARGS:
-
+Пример некорректного сочетания SETUP_ARGS и BUILD_ARGS:
 
 
 ```
-SETUP\\\_ARGS="--target-arch=aarch64 --tflite-classic-delegate"
-BUILD\\\_ARGS="--target-arch=aarch64 --all --neon-backend --cl-backend"
+SETUP_ARGS="--target-arch=aarch64 --tflite-classic-delegate"
+BUILD_ARGS="--target-arch=aarch64 --all --neon-backend --cl-backend"
 ```
-
 Приведенный выше пример некорректен, поскольку в нем выполняется попытка собрать все компоненты Arm NN после только сборки зависимостей, необходимых для делегата TF Lite.
 
 
@@ -214,51 +185,45 @@ BUILD\\\_ARGS="--target-arch=aarch64 --all --neon-backend --cl-backend"
 Перейдите в каталог Arm NN build-tool, где находятся Dockerfile и связанные с ним скрипты.
 
 
-
 ```
 cd armnn/build-tool
 ```
-
 
 
 Запустите docker build, который загрузит и соберет Arm NN и его зависимости. Этот процесс изолирован от файловой системы хост-компьютера, в результате чего создается образ Docker.
 
 Аргументы rfile передаются с помощью --build-arg, относительный путь к Dockerfile указывается с помощью --file, а текущий каталог — с помощью .
 
-Укажите описательное название для изображения с помощью --tag в формате image\_name:tag (пример приведен ниже). Обратная косая черта \\ указывает Bash на необходимость продолжения команды в следующей строке.
+Укажите описательное название для изображения с помощью --tag в формате image_name:tag (пример приведен ниже). Обратная косая черта \ указывает Bash на необходимость продолжения команды в следующей строке.
 
 
 
-В этом примере выбраны SETUP\_ARGS и BUILD\_ARGS для сборки всех компонентов Arm NN с ускоренными бэкендами NEON и OpenCL для архитектуры aarch64. Этот процесс должен занять менее часа на современном компьютере, но время может варьироваться в зависимости от выбранных аргументов и характеристик хост-компьютера.
-
+В этом примере выбраны SETUP_ARGS и BUILD_ARGS для сборки всех компонентов Arm NN с ускоренными бэкендами NEON и OpenCL для архитектуры aarch64. Этот процесс должен занять менее часа на современном компьютере, но время может варьироваться в зависимости от выбранных аргументов и характеристик хост-компьютера.
 
 
 ```
-docker build \\
---build-arg SETUP\_ARGS="--target-arch=aarch64 --all" \\
---build-arg BUILD\_ARGS="--target-arch=aarch64 --all --neon-backend --cl-backend" \\
---tag armnn:aarch64 \\
+docker build \
+--build-arg SETUP_ARGS="--target-arch=aarch64 --all" \
+--build-arg BUILD_ARGS="--target-arch=aarch64 --all --neon-backend --cl-backend" \
+--tag armnn:aarch64 \
 --file docker/Dockerfile .
 ```
 
 
 
 
-
-Архив tarball со сборкой Arm NN находится в домашнем каталоге Docker (/home/arm-user/) и называется armnn\_<target-arch>*build.tar.gz. Если в --debug выше указан флаг сборки BUILD\_ARGS, архив tarball будет называться armnn*<target-arch>\_build\_debug.tar.gz.
+Архив tarball со сборкой Arm NN находится в домашнем каталоге Docker (/home/arm-user/) и называется armnn__build.tar.gz. Если в --debug выше указан флаг сборки BUILD_ARGS, архив tarball будет называться armnn__build_debug.tar.gz.
 
 Скрипт docker-copy-to-host.sh скопирует файл из образа Docker (в домашнем каталоге arm-user) на хост-компьютер.
 
-Скрипт копирует архив tarball в новую папку на хосте в build-tool/docker\_output. Он принимает два аргумента: image\_name:tag и filename.
+Скрипт копирует архив tarball в новую папку на хосте в build-tool/docker_output. Он принимает два аргумента: image_name:tag и filename.
 
-image\_name — это относительный путь от домашнего каталога, созданного внутри образа Docker (/home/arm-user/).
-
+image_name — это относительный путь от домашнего каталога, созданного внутри образа Docker (/home/arm-user/).
 
 
 ```
-./scripts/docker-copy-to-host.sh armnn:aarch64 armnn\_aarch64\_build.tar.gz
+./scripts/docker-copy-to-host.sh armnn:aarch64 armnn_aarch64_build.tar.gz
 ```
-
 
 
 Этот архив теперь можно использовать для интеграции в приложение машинного обучения. Способ извлечения описан ниже.
@@ -266,82 +231,75 @@ image\_name — это относительный путь от домашнег
 Если --target-arch выбранное в аргументах выше устройство соответствует хост-компьютеру, сборку можно протестировать локально (в противном случае скопируйте архив на удаленное устройство).
 
 
-
 ```
-cd docker\_output
+cd docker_output
 
-# Extract the tarball into a directory called <target\_arch>\_build
-# If --debug is enabled, the extracted build directory will be called <target\_arch>\_build\_debug
+# Extract the tarball into a directory called _build
+# If --debug is enabled, the extracted build directory will be called _build_debug
   
-tar -xzf armnn\_aarch64\_build.tar.gz
+tar -xzf armnn_aarch64_build.tar.gz
 
-cd aarch64\_build
+cd aarch64_build
 
-# Set LD\_LIBRARY\_PATH to the current aarch64\_build directory (.)
-export LD\_LIBRARY\_PATH=.; ./UnitTests
+# Set LD_LIBRARY_PATH to the current aarch64_build directory (.)
+export LD_LIBRARY_PATH=.; ./UnitTests
 
 # If the Arm NN TF Lite Delegate is built, we can also run DelegateUnitTests
 cd delegate
 
-# Set LD\_LIBRARY\_PATH to the current delegate directory (.) and the aarch64\_build directory (..)
+# Set LD_LIBRARY_PATH to the current delegate directory (.) and the aarch64_build directory (..)
 
-export LD\_LIBRARY\_PATH=.:..; ./DelegateUnitTests
+export LD_LIBRARY_PATH=.:..; ./DelegateUnitTests
 ```
-
 
 
 
 
 ##### **Использование**
 
-Собранный проект находится по пути "armnn/build-tool". В каталоге находятся модели (models), скрипты запуска, демо-видео (demo\_video).
+Собранный проект находится по пути "armnn/build-tool". В каталоге находятся модели (models), скрипты запуска, демо-видео (demo_video).
 
 Т.к. динамический вход не поддерживается моделями, в каталоге "models" модели под разные разрешения:
 
-1280\*700
+1280*700
 
-800\*600
+800*600
 
-640\*480
+640*480
 
-320\*240
+320*240
 
 Входные кадры автоматически приводится к разрешению выбранной модели. От этого зависит качество и скорость работы модели.
 
+  
 **Запуск:**
-Для запуска необходимо, находясь в директории "build-tool" запустить скрипт demo\_seq.py с обязательным указанием input:
 
+  Для запуска необходимо, находясь в директории "build-tool" запустить скрипт demo_seq.py с обязательным указанием input:
 
 
 ```
-python demo\_seq.py demo\_video/demo\_video.mp4
+python demo_seq.py demo_video/demo_video.mp4
 ```
-
 
 
 Это запустит инференс модели с визуализацией на демонстрационном видео. Скрипт можно запускать с следующими параметрами:
 
-|input|Обязательный параметр. Ожидает путь к видеофайлу или значение "camera"|
-|-|-|
-|--camid|Id камеры. по умолчанию 0|
-|--top\_k|Ограничитель количества выделенных признаков. По умолчанию 4096|
-|--match\_threshold<br />|Пороговое значение для совпадения ключевых точек. По умолчанию 0.5|
-|--model|Путь к модели. По умолчанию "models/edgepoint2\_E64\_640\_480.tflite"|
-
-&#x09;
+input		|	Обязательный параметр. Ожидает путь к видеофайлу или значение "camera"
+|--|--|
+--camid	|		Id камеры. по умолчанию 0|
+--top_k		|	Ограничитель количества выделенных признаков. По умолчанию 4096|
+--match_threshold |	Пороговое значение для совпадения ключевых точек. По умолчанию 0.5|
+--model	|		Путь к модели. По умолчанию "models/edgepoint2_E64_640_480.tflite"
 
 
 
 **Пример запуска модели с камерой:**
 
 ```
-python demo\_seq.py camera \\
-
---camid 0 \\
-
---model\_path models/edgepoint2\_E64\_320\_240.tflite
+python demo_seq.py camera \
+--camid 0 \
+--model_path models/edgepoint2_E64_320_240.tflite
 ```
-
 
 
 ##### **Краткое сравнение с оригинальной моделью:**
@@ -351,6 +309,4 @@ python demo\_seq.py camera \\
 Среднее отклонение в ключевых точках по координатам на выходе в среднем в пределах 6 пикселей
 
 Разница в количестве обнаруженных ключевых точек в пределах 3% по сравнению с оригиналом
-
-##### 
 

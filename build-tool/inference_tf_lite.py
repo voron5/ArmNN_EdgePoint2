@@ -8,7 +8,7 @@ import torch.nn.functional as F
 
 def init_interpreter(model_path):
     os.environ["ARMNN_LOG_LEVEL"] = "debug"
-    DELEGATE_PATH = "/home/orangepi/projects/armnn/build-tool/docker_output/aarch64_build/delegate/libarmnnDelegate.so"
+    DELEGATE_PATH = "/docker_output/aarch64_build/delegate/libarmnnDelegate.so"
 
     delegate = tflite.load_delegate(
         DELEGATE_PATH,

@@ -318,4 +318,4 @@ python inference_clidd.py --model tflite_models/CLIDD/U128_640x480.tflite
 ```
 
 Данный скрипт только запускает инференс модели CLIDD и выводит только средний FPS на отработанном видео.
-Есть несколько конфигураций модели CLIDD. Все они находятся в "models/CLIDD"
+Есть несколько конфигураций модели CLIDD. Все они находятся в "build-tool/models/CLIDD"

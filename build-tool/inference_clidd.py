@@ -120,7 +120,7 @@ def postprocessing(data, input_shape, score_thresh=-5, top_k=4096):
 
 
 if __name__ == '__main__':
-    model_path = "tflite_models/U128_640x480.tflite"
+    model_path = "tflite_models/CLIDD/U128_640x480.tflite"
     input_path = "demo_video/demo_video.mp4"
 
     parser = argparse.ArgumentParser()

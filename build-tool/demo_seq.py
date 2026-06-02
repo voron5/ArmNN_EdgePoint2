@@ -72,7 +72,7 @@ def match(desc1, desc2, threshold=0.5):
 
 
 if __name__ == '__main__':
-    model_path = "models/edgepoint2_E64_640_480.tflite"
+    model_path = "models/EdgePoint2/edgepoint2_E64_640_480.tflite"
 
     parser = argparse.ArgumentParser()
     parser.add_argument('input', type=str, help='camera or video file')
